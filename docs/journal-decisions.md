@@ -65,3 +65,11 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Urgence** : pas de valeur par défaut, réponse obligatoire. Symptômes à choix multiple, détail facultatif.
 - **Doublon** : si une panne est déjà en cours sur la machine, bandeau d'avertissement avec lien vers l'intervention, l'envoi reste possible (choix du développeur).
 - **Écarts maquette** : pas de photo (hors périmètre) ; « Salif, le technicien, est prévenu » devient « L'équipe du restaurant est prévenue » (personne n'est assigné à la déclaration). Mails et push : étape 7.
+
+## 2026-09-30 · Interventions (étape 3)
+- **Décision** : `/interventions` (onglets En cours / Terminées / Toutes sur ordinateur, groupes Urgences, Normales, Alertes, filtres restaurant, type, technicien dont « pas encore attribuée ») et `/interventions/[id]` (panneau à droite sur ordinateur, page entière sur mobile). Aucune migration.
+- **Clôture** : fonction existante `cloturer_intervention` (ce qui a été fait obligatoire, pièces avec quantité, état après, technicien). Chaque pièce affiche le stock restant et prévient sous le seuil ; pièces prévues pour la machine (« va avec ») en tête ; pièces à 0 non proposées.
+- **Enregistrer sans clôturer** : travail en cours et technicien en écriture directe (RLS). Le technicien est revérifié côté serveur : propriétaire, éditeur ou commentateur ayant accès au restaurant.
+- **Filtres** : composant générique `components/app/url-filters.tsx` (recherche + puces dans l'URL), partagé avec Équipements.
+- **Écart relevé, non corrigé** : la règle métier « clôturer met à jour le dernier entretien de la machine (sauf alerte) » n'est pas appliquée par `cloturer_intervention`. Correction à proposer (migration).
+- **Reporté** : « Nouvelle intervention » / « Ajouter une intervention » (nouvelle fonction SQL, choix du développeur).
