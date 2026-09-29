@@ -54,7 +54,14 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 
 ## 2026-09-30 · Équipements : ajout, modification, suppression (étape 1b)
 - **Décision** : migration `20260930090000_enregistrer_equipement.sql`. `enregistrer_equipement` (SECURITY DEFINER, propriétaire et éditeur, restaurant vérifié, y compris l'ancien restaurant en cas de déplacement) crée ou modifie en une transaction : équipement, catégorie ou marque créées à la volée (nom identique réutilisé), plan d'entretien, événement de fiche de vie (« Équipement ajouté », « Informations modifiées » ou « État : A → B »).
-- **Code automatique** : `prochain_code_equipement` propose `CTR2-REF-05` (code restaurant, code catégorie, plus grand numéro + 1 ; `EQP` sans catégorie). La maquette montre `CTR2-FRG-06` : on suit la décision du 29/09 (code catégorie). Code modifiable ; un code en double est refusé (message clair). Code d'une nouvelle catégorie : 3 lettres sans accent (`code_categorie_libre`, non appelable directement).
+- **Code automatique** : `prochain_code_equipement` propose `CTR2-REF-05` (code restaurant, code catégorie, plus grand numéro + 1 ; `EQP` sans catégorie). La maquette montre `CTR2-FRG-06` : on suit la décision du 29/09 (code catégorie). Convention validée par le développeur le 2026-09-30 (plus logique et extensible que l'ancien segment basé sur le nom). Code modifiable ; un code en double est refusé (message clair). Code d'une nouvelle catégorie : 3 lettres sans accent (`code_categorie_libre`, non appelable directement).
 - **Échéance** : sans entretien noté, première échéance = aujourd'hui + fréquence ; changement de fréquence = recalcul depuis le dernier entretien. Sans fréquence choisie, le plan existant n'est pas modifié.
 - **Suppression** : propriétaire seulement (RLS), confirmation obligatoire, cascade sur interventions, entretiens et fiche de vie.
 - **Vérifié** : 10 scénarios SQL en local (code auto, catégorie réutilisée, échéances, refus lecteur, restaurant non autorisé, code en double, nom vide) ; `next build` OK.
+- **Base hébergée** : migration poussée le 2026-09-30 après feu vert (local et remote alignés).
+
+## 2026-09-30 · Déclarer une panne (étape 2)
+- **Décision** : `/panne` appelle la fonction existante `declarer_panne` (aucune migration). Mobile : plein écran en 2 étapes (machine, puis symptômes et urgence) ; ordinateur : fenêtre modale en 3 blocs. `?equipement=ID` pré-choisit la machine (bouton « Déclarer une panne sur cette machine » de la fiche, tous les rôles). « Je ne trouve pas la machine » : texte libre + restaurant. Confirmation sur `/panne/envoyee/[id]`.
+- **Urgence** : pas de valeur par défaut, réponse obligatoire. Symptômes à choix multiple, détail facultatif.
+- **Doublon** : si une panne est déjà en cours sur la machine, bandeau d'avertissement avec lien vers l'intervention, l'envoi reste possible (choix du développeur).
+- **Écarts maquette** : pas de photo (hors périmètre) ; « Salif, le technicien, est prévenu » devient « L'équipe du restaurant est prévenue » (personne n'est assigné à la déclaration). Mails et push : étape 7.

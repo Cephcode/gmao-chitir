@@ -17,6 +17,7 @@ import {
 import { Icon, type IconName } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
+import { buttonClass } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MaintenanceDoneButton } from "@/components/app/equipements/maintenance-done-button";
 
@@ -327,6 +328,14 @@ export async function EquipmentSheet({
             value={lastRepair ? `${dateCourte(lastRepair.created_at)} · ${lastRepair.summary}` : null}
           />
         </Card>
+
+        {/* Tous les rôles peuvent déclarer une panne, lecteur compris */}
+        <Link
+          href={`/panne?equipement=${e.id}`}
+          className={`${buttonClass({ variant: "secondary" })} w-full`}
+        >
+          <Icon name="alert" /> Déclarer une panne sur cette machine
+        </Link>
       </div>
 
       {/* Historique (fiche de vie) */}
