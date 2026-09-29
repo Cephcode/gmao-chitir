@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getNavCounts, getProfile } from "@/lib/session";
 import {
   applyFilters,
+  canEditEquipments,
   filtersQuery,
   getEquipment,
   listEquipments,
@@ -37,6 +38,7 @@ export default async function FicheEquipementPage(props: PageProps<"/equipements
           options={options}
           selectedId={equipment.id}
           unread={unread}
+          canCreate={canEditEquipments(profile.role)}
         />
       </div>
       <aside

@@ -10,6 +10,7 @@ import { aujourdhui, dateCourte, depuis } from "@/lib/format";
 import {
   type EquipmentRow,
   FREQUENCY_LABELS,
+  canEditEquipments,
   STATE_BADGE,
   maintenanceOf,
 } from "@/lib/equipements";
@@ -79,13 +80,28 @@ function moisAnnee(date: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null }) {
+// Valeur absente : « Ajouter » (lien vers le formulaire) si on peut modifier, sinon « Non renseigné ».
+function InfoRow({
+  label,
+  value,
+  addHref,
+}: {
+  label: string;
+  value: string | null;
+  addHref?: string;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-3">
       <span className="text-text-muted text-[15px]">{label}</span>
-      <span className={`text-right text-[15px] ${value ? "font-semibold" : "text-text-muted"}`}>
-        {value ?? "Non renseigné"}
-      </span>
+      {value ? (
+        <span className="text-right text-[15px] font-semibold">{value}</span>
+      ) : addHref ? (
+        <Link href={addHref} className="text-orange-text font-bold text-[15px] underline underline-offset-2">
+          Ajouter
+        </Link>
+      ) : (
+        <span className="text-right text-[15px] text-text-muted">Non renseigné</span>
+      )}
     </div>
   );
 }
@@ -129,6 +145,7 @@ export async function EquipmentSheet({
 
   const m = maintenanceOf(e.plan);
   const canNoteMaintenance = role !== "lecteur";
+  const canEdit = canEditEquipments(role);
   const subtitle = [e.code, e.restaurant.short_code, e.category?.name].filter(Boolean).join(" · ");
   const brandModel = [e.brand?.name, e.model].filter(Boolean).join(" ") || null;
 
@@ -138,6 +155,7 @@ export async function EquipmentSheet({
     for (const [k, v] of Object.entries(extra)) params.set(k, v);
     return `/equipements/${e.id}?${params}`;
   };
+  const editHref = canEdit ? `/equipements/${e.id}/modifier${query}` : undefined;
   // Sur ordinateur, seul l'onglet actif est visible ; sur mobile, tout est empilé.
   const onlyOnTab = (t: "infos" | "historique") => (tab === t ? "" : "lg:hidden");
 
@@ -151,9 +169,20 @@ export async function EquipmentSheet({
         >
           <Icon name="chevronRight" className="rotate-180" /> Équipements
         </Link>
+        <span className="lg:hidden flex-1" />
         <span className="hidden lg:block flex-1 text-text-muted text-[13px] font-semibold">
           Fiche équipement
         </span>
+        {editHref && (
+          <Link
+            href={editHref}
+            aria-label="Modifier l'équipement"
+            className="inline-flex items-center gap-2 h-touch px-2.5 lg:px-3.5 rounded font-semibold text-text lg:shadow-[inset_0_0_0_1.5px_var(--color-ring)] hover:bg-surface-2"
+          >
+            <Icon name="edit" size={18} />
+            <span className="hidden lg:inline">Modifier</span>
+          </Link>
+        )}
         <Link
           href={closeHref}
           aria-label="Fermer la fiche"
@@ -271,7 +300,12 @@ export async function EquipmentSheet({
           ) : (
             <>
               <p className="text-text-muted text-[14px] m-0">
-                Aucun plan d&apos;entretien : fréquence à définir.
+                Aucun plan d&apos;entretien : fréquence à définir.{" "}
+                {editHref && (
+                  <Link href={editHref} className="text-orange-text font-bold underline underline-offset-2">
+                    Définir
+                  </Link>
+                )}
               </p>
               {/* Sans plan, l'entretien est quand même inscrit dans la fiche de vie */}
               {canNoteMaintenance && <MaintenanceDoneButton equipmentId={e.id} />}
@@ -281,9 +315,13 @@ export async function EquipmentSheet({
 
         {/* Informations */}
         <Card padded={false} className="px-5 divide-y divide-surface-2">
-          <InfoRow label="Marque / modèle" value={brandModel} />
-          <InfoRow label="N° de série" value={e.serial_number} />
-          <InfoRow label="Installé le" value={e.installed_at ? moisAnnee(e.installed_at) : null} />
+          <InfoRow label="Marque / modèle" value={brandModel} addHref={editHref} />
+          <InfoRow label="N° de série" value={e.serial_number} addHref={editHref} />
+          <InfoRow
+            label="Installé le"
+            value={e.installed_at ? moisAnnee(e.installed_at) : null}
+            addHref={editHref}
+          />
           <InfoRow
             label="Dernière réparation"
             value={lastRepair ? `${dateCourte(lastRepair.created_at)} · ${lastRepair.summary}` : null}

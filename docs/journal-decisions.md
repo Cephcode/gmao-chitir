@@ -51,3 +51,10 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Statut d'entretien** : calculé (`maintenanceOf` dans `lib/equipements.ts`), jamais stocké : à définir (sans échéance), à jour, en retard (avec le nombre de jours).
 - **Noter l'entretien** : action serveur qui appelle `noter_entretien_fait` (rôle et restaurant vérifiés en SQL). Bouton visible pour propriétaire, éditeur, commentateur, y compris sans plan (l'entretien est alors inscrit dans la fiche de vie).
 - **Écarté** : commentaires (hors périmètre). « Ajouter une intervention » et « Déclarer une panne sur cette machine » viendront avec les étapes Interventions et Panne ; « Modifier » et « Ajouter un équipement » avec l'étape 1b.
+
+## 2026-09-30 · Équipements : ajout, modification, suppression (étape 1b)
+- **Décision** : migration `20260930090000_enregistrer_equipement.sql`. `enregistrer_equipement` (SECURITY DEFINER, propriétaire et éditeur, restaurant vérifié, y compris l'ancien restaurant en cas de déplacement) crée ou modifie en une transaction : équipement, catégorie ou marque créées à la volée (nom identique réutilisé), plan d'entretien, événement de fiche de vie (« Équipement ajouté », « Informations modifiées » ou « État : A → B »).
+- **Code automatique** : `prochain_code_equipement` propose `CTR2-REF-05` (code restaurant, code catégorie, plus grand numéro + 1 ; `EQP` sans catégorie). La maquette montre `CTR2-FRG-06` : on suit la décision du 29/09 (code catégorie). Code modifiable ; un code en double est refusé (message clair). Code d'une nouvelle catégorie : 3 lettres sans accent (`code_categorie_libre`, non appelable directement).
+- **Échéance** : sans entretien noté, première échéance = aujourd'hui + fréquence ; changement de fréquence = recalcul depuis le dernier entretien. Sans fréquence choisie, le plan existant n'est pas modifié.
+- **Suppression** : propriétaire seulement (RLS), confirmation obligatoire, cascade sur interventions, entretiens et fiche de vie.
+- **Vérifié** : 10 scénarios SQL en local (code auto, catégorie réutilisée, échéances, refus lecteur, restaurant non autorisé, code en double, nom vide) ; `next build` OK.

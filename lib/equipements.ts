@@ -24,8 +24,8 @@ export type EquipmentRow = {
   serial_number: string | null;
   installed_at: string | null;
   restaurant: { id: string; short_code: string; name: string };
-  category: { name: string; code: string } | null;
-  brand: { name: string } | null;
+  category: { id: string; name: string; code: string } | null;
+  brand: { id: string; name: string } | null;
   plan: Plan | null;
 };
 
@@ -125,7 +125,7 @@ function one<T>(v: T | T[] | null | undefined): T | null {
 
 const EQUIPMENT_SELECT =
   "id, code, name, state, model, serial_number, installed_at, " +
-  "restaurants(id, short_code, name), categories(name, code), brands(name), " +
+  "restaurants(id, short_code, name), categories(id, name, code), brands(id, name), " +
   "maintenance_plans(task, frequency, last_done_at, next_due_at)";
 
 type RawEquipment = Omit<EquipmentRow, "restaurant" | "category" | "brand" | "plan"> & {
@@ -166,6 +166,34 @@ export async function getEquipment(id: string): Promise<EquipmentRow | null> {
     .eq("id", id)
     .maybeSingle();
   return data ? toRow(data as unknown as RawEquipment) : null;
+}
+
+// Seuls le propriétaire et l'éditeur créent et modifient (vérifié aussi en base).
+export const canEditEquipments = (role: string | undefined) =>
+  role === "proprietaire" || role === "editeur";
+
+// Listes du formulaire : restaurants accessibles (avec id), catégories et marques
+// avec leur nombre d'équipements visibles (repère dans les listes déroulantes).
+export async function listFormOptions(equipments: EquipmentRow[]) {
+  const supabase = await createClient();
+  const [r, c, b] = await Promise.all([
+    supabase.from("restaurants").select("id, short_code, name").order("short_code"),
+    supabase.from("categories").select("id, name").order("name"),
+    supabase.from("brands").select("id, name").order("name"),
+  ]);
+  const count = (pick: (e: EquipmentRow) => string | undefined, id: string) =>
+    equipments.filter((e) => pick(e) === id).length;
+  return {
+    restaurants: (r.data ?? []) as { id: string; short_code: string; name: string }[],
+    categories: ((c.data ?? []) as { id: string; name: string }[]).map((x) => ({
+      ...x,
+      count: count((e) => e.category?.id, x.id),
+    })),
+    brands: ((b.data ?? []) as { id: string; name: string }[]).map((x) => ({
+      ...x,
+      count: count((e) => e.brand?.id, x.id),
+    })),
+  };
 }
 
 // Listes des filtres : restaurants accessibles et catégories.

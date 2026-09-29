@@ -12,6 +12,7 @@ import {
   maintenanceOf,
 } from "@/lib/equipements";
 import { Icon } from "@/components/icons";
+import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ListRow } from "@/components/app/list-row";
@@ -33,6 +34,7 @@ export function EquipmentList({
   options,
   selectedId,
   unread,
+  canCreate = false,
 }: {
   rows: EquipmentRow[];
   total: number;
@@ -43,6 +45,7 @@ export function EquipmentList({
   };
   selectedId?: string;
   unread: number;
+  canCreate?: boolean; // propriétaire ou éditeur
 }) {
   const query = filtersQuery(filters);
   const hasFilters = query !== "";
@@ -53,6 +56,23 @@ export function EquipmentList({
         <h1 className="flex-1 font-display text-[22px] lg:text-[32px] font-semibold m-0 leading-tight">
           Équipements <span className="text-text-muted font-normal lg:text-[24px]">{total}</span>
         </h1>
+        {canCreate && (
+          <>
+            <Link
+              href={`/equipements/nouveau${query}`}
+              aria-label="Ajouter un équipement"
+              className="lg:hidden size-touch rounded bg-surface shadow-[inset_0_0_0_1.5px_var(--color-ring)] flex items-center justify-center text-text"
+            >
+              <Icon name="plus" />
+            </Link>
+            <Link
+              href={`/equipements/nouveau${query}`}
+              className={`hidden lg:inline-flex ${buttonClass()}`}
+            >
+              <Icon name="plus" /> Ajouter un équipement
+            </Link>
+          </>
+        )}
         <Link
           href="/notifications"
           aria-label={`Notifications, ${unread} non lues`}
