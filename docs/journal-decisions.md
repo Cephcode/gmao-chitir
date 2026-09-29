@@ -72,4 +72,11 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Enregistrer sans clôturer** : travail en cours et technicien en écriture directe (RLS). Le technicien est revérifié côté serveur : propriétaire, éditeur ou commentateur ayant accès au restaurant.
 - **Filtres** : composant générique `components/app/url-filters.tsx` (recherche + puces dans l'URL), partagé avec Équipements.
 - **Écart corrigé** (validé le 2026-09-30) : la règle « clôturer met à jour le dernier entretien de la machine (sauf alerte) » n'était pas appliquée. Migration `20260930120000_cloture_met_a_jour_entretien.sql` : si la machine a un plan, dernier entretien = jour de clôture et échéance recalculée ; une ligne est ajoutée au journal d'entretien (même sans plan). Testé en local : clôture normale, alerte (inchangé), machine sans plan, décrément du stock.
+- **Base hébergée** : migration du correctif poussée le 2026-09-30 après feu vert.
 - **Reporté** : « Nouvelle intervention » / « Ajouter une intervention » (nouvelle fonction SQL, choix du développeur).
+
+## 2026-09-30 · Stock (étape 4)
+- **Décision** : `/stock` (pièces sous le seuil en premier, onglets Toutes / Sous le seuil sur mobile, bandeau « N'afficher qu'elles » sur ordinateur, puce « Va avec » par catégorie de machine ou « Toutes machines »), `/stock/[id]` (fiche), `/stock/nouvelle` et `/stock/[id]/modifier`. Aucune migration.
+- **Quantités** : ne bougent que par `mouvement_stock` (livraison, correction ±1 avec les boutons − / +) ou par la clôture d'intervention. Une nouvelle pièce est créée à 0 puis son stock initial entre comme une livraison, pour que la quantité reste la somme des mouvements (deux appels : si le second échoue, message demandant de saisir une livraison).
+- **Va avec / utilisée sur** : « va avec » = machines prévues, saisies dans le formulaire (`part_compatibilities`, limité aux machines des restaurants de l'utilisateur) ; « utilisée sur » = déduit des pièces des interventions, avec les quantités. Affichés séparément.
+- **Suppression** : propriétaire seulement ; refusée si la pièce a servi dans une intervention (historique conservé).
