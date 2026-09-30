@@ -88,7 +88,7 @@ insert into users (id, first_name, email, role, all_restaurants, must_change_pas
 select tests.id(n), f, n || '@test.local', r::user_role, a, false
 from (values
   ('prop', 'Prosper', 'proprietaire', true),
-  ('prop1', 'Paul', 'proprietaire', false),
+  ('prop1', 'Paul', 'proprietaire', true),  -- plus de propriétaire limité (recette S-M2)
   ('ed1', 'Eddy', 'editeur', false),
   ('ed2', 'Edith', 'editeur', false),
   ('com1', 'Awa', 'commentateur', false),
@@ -100,7 +100,7 @@ from (values
 
 insert into user_restaurants (user_id, restaurant_id)
 select tests.id(u), tests.id(r) from (values
-  ('prop1', 'R1'), ('ed1', 'R1'), ('com1', 'R1'), ('com1b', 'R1'), ('lec1', 'R1'),
+  ('ed1', 'R1'), ('com1', 'R1'), ('com1b', 'R1'), ('lec1', 'R1'),
   ('ed2', 'R2'), ('com2', 'R2'), ('lec2', 'R2')
 ) as v(u, r);
 

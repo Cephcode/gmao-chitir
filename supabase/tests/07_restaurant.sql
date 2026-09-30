@@ -44,24 +44,25 @@ select is((select count(*)::int from part_compatibilities pc join equipments e o
           'copie : pièces « va avec » reprises');
 select is((select count(*)::int from equipments where restaurant_id = tests.id('R1')), 4, 'source R1 inchangée (E1, E3, E4, E5)');
 
--- Restaurant vide, propriétaire limité : il obtient l'accès au restaurant créé
+-- Restaurant vide, créé par un propriétaire (prop1, tous restaurants depuis la recette S-M2)
 select tests.se_connecter('prop1');
-select lives_ok($$ insert into ctx values ('V', ajouter_restaurant('Test D', 'TSTD')) $$, 'propriétaire limité : ajout sans copie accepté');
+select lives_ok($$ insert into ctx values ('V', ajouter_restaurant('Test D', 'TSTD')) $$, 'propriétaire : ajout sans copie accepté');
 select is((select count(*)::int from restaurants where id = (select v from ctx where k = 'V')), 1,
-          'propriétaire limité : voit le restaurant qu''il vient de créer');
+          'propriétaire : voit le restaurant qu''il vient de créer');
 select tests.se_deconnecter();
 select is((select count(*)::int from equipments where restaurant_id = (select v from ctx where k = 'V')), 0, 'sans copie : aucune machine');
 
 -- Refus et validations
 select tests.se_connecter('prop1');
-select throws_ok($$ select ajouter_restaurant('Copie R2', 'TSTE', null, tests.id('R2')) $$, 'P0002', null,
-                 'propriétaire limité : copier un restaurant auquel il n''a pas accès refusé');
 select throws_ok($$ select ajouter_restaurant('Doublon', 'TSTA') $$, '23505', null, 'code court déjà pris refusé');
 select throws_ok($$ select ajouter_restaurant('Court', 'T') $$, '22023', null, 'code court d''une lettre refusé');
 select throws_ok($$ select ajouter_restaurant('Espace', 'TS T') $$, '22023', null, 'code court avec espace refusé');
 select throws_ok($$ select ajouter_restaurant('Long', 'TSTLONG') $$, '22023', null, 'code court de 7 caractères refusé');
 select throws_ok($$ select ajouter_restaurant('  ', 'TSTF') $$, '22023', null, 'nom vide refusé');
 select tests.se_deconnecter();
+-- Recette S-M2 : le propriétaire limité n'existe plus, la base le refuse (même en écriture privilégiée).
+select throws_ok($$ update users set all_restaurants = false where id = tests.id('prop1') $$, '23514', null,
+                 'propriétaire limité à certains restaurants : refusé par la base');
 select is(tests.essai('ed1', $$ select 1 from (select ajouter_restaurant('Par éditeur', 'TSTG')) s $$), 'refusé', 'éditeur : ajout refusé');
 select is(tests.essai('com1', $$ select 1 from (select ajouter_restaurant('Par technicien', 'TSTG')) s $$), 'refusé', 'commentateur : ajout refusé');
 select is(tests.essai('lec1', $$ select 1 from (select ajouter_restaurant('Par lecteur', 'TSTG')) s $$), 'refusé', 'lecteur : ajout refusé');

@@ -81,6 +81,8 @@ export function UserForm({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((cur) => ({ ...cur, [k]: val }));
+  // Un propriétaire a toujours accès à tous les restaurants (règle vérifiée aussi côté serveur et en base).
+  const choisirRole = (role: Role) => setV((cur) => ({ ...cur, role, allRestaurants: role === "proprietaire" ? true : cur.allRestaurants }));
   const toggleRestaurant = (id: string) =>
     set("restaurantIds", v.restaurantIds.includes(id) ? v.restaurantIds.filter((r) => r !== id) : [...v.restaurantIds, id]);
 
@@ -177,7 +179,7 @@ export function UserForm({
                         role="radio"
                         aria-checked={on}
                         disabled={isSelf}
-                        onClick={() => set("role", r.value)}
+                        onClick={() => choisirRole(r.value)}
                         className={`flex items-start gap-3 p-3.5 rounded text-left border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                           on ? "bg-orange-soft shadow-[inset_0_0_0_2px_var(--color-orange)]" : "bg-surface shadow-[inset_0_0_0_1.5px_var(--color-border)] hover:bg-background"
                         }`}
@@ -223,12 +225,15 @@ export function UserForm({
                     <input
                       type="checkbox"
                       checked={v.allRestaurants}
-                      disabled={isSelf}
+                      disabled={isSelf || v.role === "proprietaire"}
                       onChange={(e) => set("allRestaurants", e.target.checked)}
                       className="size-5 accent-[var(--color-filter-active)]"
                     />
                     <span className="text-[15px]">Tous, y compris les futurs restaurants</span>
                   </label>
+                )}
+                {v.role === "proprietaire" && (
+                  <p className="m-0 text-text-muted text-[13px]">Un propriétaire a toujours accès à tous les restaurants.</p>
                 )}
                 {fieldError("restaurants") && <p className="m-0 text-danger text-[13px] font-semibold">{fieldError("restaurants")}</p>}
               </fieldset>

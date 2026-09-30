@@ -9,6 +9,7 @@ import {
   canAccessAdmin,
   canManage,
   checkAssignment,
+  normaliserAcces,
   type Actor,
   type AdminUser,
 } from "@/lib/admin-rules";
@@ -79,6 +80,15 @@ describe("checkAssignment (création / modification)", () => {
   test("propriétaire : tout rôle, tous les restaurants", () => {
     assert.equal(checkAssignment(proprio, { role: "proprietaire", allRestaurants: true, restaurantIds: [] }, TOUS), null);
     assert.equal(checkAssignment(proprio, { role: "editeur", allRestaurants: false, restaurantIds: [R3] }, TOUS), null);
+  });
+  test("propriétaire limité à certains restaurants refusé (recette S-M2)", () => {
+    assert.match(checkAssignment(proprio, { role: "proprietaire", allRestaurants: false, restaurantIds: [R1] }, TOUS) ?? "", /tous les restaurants/);
+  });
+  test("rôle propriétaire : accès forcé à tous les restaurants", () => {
+    assert.deepEqual(normaliserAcces({ role: "proprietaire", allRestaurants: false, restaurantIds: [R1] }),
+      { role: "proprietaire", allRestaurants: true, restaurantIds: [] });
+    const lect = { role: "lecteur" as const, allRestaurants: false, restaurantIds: [R1] };
+    assert.deepEqual(normaliserAcces(lect), lect);
   });
   test("commentateur et lecteur ne peuvent rien attribuer d'élevé", () => {
     for (const a of [commentateur, lecteur]) {

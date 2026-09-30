@@ -18,6 +18,7 @@ import {
   getActor,
   listRestaurants,
   motDePasseTemporaire,
+  normaliserAcces,
 } from "@/lib/admin";
 
 export type AccountResult =
@@ -58,7 +59,8 @@ async function setRestaurants(userId: string, a: Assignment) {
   }
 }
 
-export async function creerCompte(input: Assignment & { identifiant: string; firstName: string }): Promise<AccountResult> {
+export async function creerCompte(saisie: Assignment & { identifiant: string; firstName: string }): Promise<AccountResult> {
+  const input = normaliserAcces(saisie);
   const actor = await getActor();
   if (!actor || (actor.role !== "proprietaire" && actor.role !== "editeur")) {
     return { ok: false, error: "Votre rôle ne permet pas de créer des comptes." };
@@ -108,7 +110,8 @@ export async function creerCompte(input: Assignment & { identifiant: string; fir
   return { ok: true, tempPassword, identifiant: email };
 }
 
-export async function modifierCompte(input: Assignment & { id: string; firstName: string }): Promise<AccountResult> {
+export async function modifierCompte(saisie: Assignment & { id: string; firstName: string }): Promise<AccountResult> {
+  const input = normaliserAcces(saisie);
   const actor = await getActor();
   const target = await loadTarget(input.id);
   if (!actor || !target || !canManage(actor, target)) {

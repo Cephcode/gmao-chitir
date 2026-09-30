@@ -1,7 +1,8 @@
 -- 4. Matrice des droits : chaque rôle contre chaque action, sur son restaurant (R1) et sur
 -- un autre (R2), vérifiée en base (RLS et fonctions), en simulant l'utilisateur connecté
 -- (role authenticated + request.jwt.claims). Chaque essai est annulé (sous-transaction).
--- Acteurs : prop1 (propriétaire limité à R1), ed1, com1, lec1 (tous sur R1).
+-- Acteurs : prop1 (propriétaire, donc tous les restaurants depuis la recette S-M2), ed1, com1, lec1 (sur R1).
+-- prop1 est donc autorisé aussi sur R2 pour les actions de son rôle.
 -- Refus = erreur 42501 / P0002 ou 0 ligne visible / modifiée (filtrage RLS).
 begin;
 \ir _fixture.sql
@@ -45,7 +46,7 @@ select is(
   tests.essai(ac.acteur, replace(replace(replace(replace(a.sql,
       '{EP}', format('tests.id(%L)', p.ep)), '{E}', format('tests.id(%L)', p.e)),
       '{I}', format('tests.id(%L)', p.i)), '{R}', format('tests.id(%L)', p.r))),
-  case when p.portee = 'son restaurant' and ac.acteur = any(a.roles_autorises) then 'autorisé' else 'refusé' end,
+  case when (p.portee = 'son restaurant' or ac.acteur = 'prop1') and ac.acteur = any(a.roles_autorises) then 'autorisé' else 'refusé' end,
   ac.acteur || ' | ' || a.action || ' | ' || p.portee)
 from actions a cross join portees p cross join acteurs ac
 order by a.ordre, p.portee desc, ac.ordre;
@@ -66,7 +67,7 @@ insert into actions_globales values
  (11, 'créer un profil de compte',            $$with t as (insert into users (id, email, role) values (tests.id('R1'), 'x@test.local', 'proprietaire') returning 1) select count(*) from t$$, '{}'),
  (12, 's''ajouter un restaurant',             $$with t as (insert into user_restaurants (user_id, restaurant_id) values (auth.uid(), tests.id('R2')) returning 1) select count(*) from t$$, '{}'),
  (13, 'retirer l''accès d''un collègue',      $$with t as (delete from user_restaurants where user_id <> auth.uid() returning 1) select count(*) from t$$, '{}'),
- (14, 'voir un compte d''un autre restaurant',$$select count(*) from users where id = tests.id('lec2')$$, '{}'),
+ (14, 'voir un compte d''un autre restaurant',$$select count(*) from users where id = tests.id('lec2')$$, '{prop1}'),
  (15, 'créer une notification',               $$with t as (insert into notifications (user_id, type, title) values (auth.uid(), 'panne', 'x') returning 1) select count(*) from t$$, '{}'),
  (16, 'lire les notifications d''un autre',   $$select count(*) from notifications where user_id = tests.id('prop')$$, '{}'),
  (17, 'lancer la tâche quotidienne',          $$select 1 from (select taches_quotidiennes()) s$$, '{}'),

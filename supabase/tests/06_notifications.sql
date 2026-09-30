@@ -41,12 +41,12 @@ select tests.se_deconnecter();
 select is((select distinct title || ' | ' || body from notifications where link = '/interventions/' || (select v from ctx where k = 'C')),
           'Panne : Machine à glaçons, TSTA | Déclarée par Eddy · à traiter', 'machine libre : titre et texte par défaut');
 
--- Panne sur R2 : seulement l'équipe de R2 et le propriétaire « tous restaurants »
+-- Panne sur R2 : seulement l'équipe de R2 et les propriétaires (tous restaurants, recette S-M2)
 select tests.se_connecter('lec2');
 insert into ctx values ('D', declarer_panne(tests.id('E2')));
 select tests.se_deconnecter();
 select set_eq($$ select * from tests.dest('panne', '/interventions/' || (select v from ctx where k = 'D')) $$,
-              $$ select * from tests.ids_de(array['prop', 'ed2', 'com2']) $$, 'panne R2 : prop, ed2, com2 uniquement');
+              $$ select * from tests.ids_de(array['prop', 'prop1', 'ed2', 'com2']) $$, 'panne R2 : prop, prop1, ed2, com2 uniquement');
 
 -- Réparation : réglage coupé chez le déclarant => pas de notification
 insert into notification_settings values (tests.id('lec2'), 'reparation', false);
@@ -98,7 +98,7 @@ select set_eq($$ select * from tests.dest('entretien_prevu', '/equipements/' || 
               $$ select * from tests.ids_de(array['prop', 'prop1', 'ed1', 'com1']) $$,
               'à prévoir (J-3) sur R1 : prop, prop1, ed1, com1 (pas les lecteurs, pas com1b qui a coupé)');
 select set_eq($$ select * from tests.dest('entretien_retard', '/equipements/' || tests.id('E2')) $$,
-              $$ select * from tests.ids_de(array['prop', 'ed2', 'com2']) $$, 'en retard sur R2 : prop, ed2, com2');
+              $$ select * from tests.ids_de(array['prop', 'prop1', 'ed2', 'com2']) $$, 'en retard sur R2 : prop, prop1, ed2, com2');
 select is((select count(*)::int from notifications where link = '/equipements/' || tests.id('E4')), 0, 'machine hors service : pas de rappel');
 select is((select count(*)::int from notifications where link = '/equipements/' || tests.id('E3')), 0, 'échéance aujourd''hui : pas de rappel');
 select is((select count(*)::int from notifications where link = '/equipements/' || tests.id('E5')), 0, 'échéance dans 2 jours : pas de rappel');
@@ -114,8 +114,8 @@ select is((select count(*) from notifications), (select n from apres1), 'tâche 
 -- Le lendemain (simulé en reculant les notifications d'un jour) : le retard est rappelé à nouveau.
 update notifications set created_at = created_at - interval '1 day';
 select taches_quotidiennes();
-select is((select count(*)::int from notifications where type = 'entretien_retard' and link = '/equipements/' || tests.id('E2')), 6,
-          'retard rappelé chaque matin : 3 hier + 3 aujourd''hui');
+select is((select count(*)::int from notifications where type = 'entretien_retard' and link = '/equipements/' || tests.id('E2')), 8,
+          'retard rappelé chaque matin : 4 hier + 4 aujourd''hui');
 
 -- Date courte
 select is(date_courte_fr('2026-09-16'), '16 sept.', 'date courte : 16 sept.');

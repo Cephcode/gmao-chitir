@@ -12,6 +12,7 @@ export {
   canAccessAdmin,
   canManage,
   checkAssignment,
+  normaliserAcces,
 } from "@/lib/admin-rules";
 import type { Actor, AdminUser } from "@/lib/admin-rules";
 

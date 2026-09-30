@@ -1,6 +1,7 @@
 // Règles de délégation de l'administration, sans accès à la base : testables seules
 // (voir docs/journal-decisions.md). Vérifiées côté serveur avant toute écriture.
-// - propriétaire : gère tout le monde, tous les rôles, tous les restaurants ;
+// - propriétaire : gère tout le monde, tous les rôles, tous les restaurants ; il a
+//   toujours accès à tous les restaurants (contrainte en base, recette S-M2) ;
 // - éditeur : gère seulement les éditeurs, commentateurs et lecteurs de SES restaurants,
 //   ne crée jamais de propriétaire ni d'accès « tous les restaurants » ;
 // - personne ne change son propre rôle ni ne supprime son propre compte (actions) ;
@@ -44,6 +45,12 @@ export function assignableRestaurants(actor: Actor, allIds: string[]): string[] 
     : allIds.filter((id) => actor.restaurantIds.includes(id));
 }
 
+// Un propriétaire a toujours accès à tous les restaurants : on force le choix avant de
+// vérifier et d'écrire (la base refuse de toute façon un propriétaire limité).
+export function normaliserAcces<T extends { role: Role; allRestaurants: boolean; restaurantIds: string[] }>(input: T): T {
+  return input.role === "proprietaire" ? { ...input, allRestaurants: true, restaurantIds: [] } : input;
+}
+
 // L'acteur peut-il gérer ce compte (modifier, réinitialiser, supprimer) ?
 export function canManage(actor: Actor, target: AdminUser): boolean {
   if (actor.role === "proprietaire") return true;
@@ -60,6 +67,7 @@ export function checkAssignment(
   allIds: string[],
 ): string | null {
   if (!assignableRoles(actor).includes(input.role)) return "Vous ne pouvez pas attribuer ce rôle.";
+  if (input.role === "proprietaire" && !input.allRestaurants) return "Un propriétaire a accès à tous les restaurants.";
   if (input.allRestaurants) {
     return actor.role === "proprietaire" ? null : "Seul un propriétaire donne l'accès à tous les restaurants.";
   }
