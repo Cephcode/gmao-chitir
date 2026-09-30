@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Fondations du systeme de design GMAO Chitir Chicken (etape 1).
+  Couleurs relevees dans les visuels de l'enseigne, contrastes WCAG 2.1 verifies.
+  Regle: le texte sur l'orange est toujours brun fonce (#2B1A10), jamais blanc.
+*/
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  /* Familles de police (voir app/layout.tsx pour Poppins et Figtree) */
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-display: var(--font-poppins), system-ui, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Couleur principale: Orange Chitir (actions) */
+  --color-orange: #f88f1f; /* principal, 7,1:1 sur brun */
+  --color-orange-hover: #e97f10; /* survol */
+  --color-orange-active: #d06f08; /* appui */
+  --color-orange-soft: #fef1e2; /* fond leger */
+  --color-orange-selected: #fde3c6; /* fond de selection */
+  --color-orange-text: #a34e00; /* texte et liens sur blanc, 5,8:1 */
+  --color-on-orange: #2b1a10; /* texte pose sur l'orange, jamais blanc */
+
+  /* Rouge de marque: identite seulement (logo, connexion), jamais un statut */
+  --color-brand-red: #ed1a26;
+
+  /* Neutres legerement chauds (derives du creme et du brun de l'enseigne) */
+  --color-surface: #ffffff; /* cartes */
+  --color-background: #fbf8f3; /* fond de l'app */
+  --color-surface-2: #f4eee5; /* fond secondaire */
+  --color-border: #e9e1d5; /* bordure de carte */
+  --color-border-strong: #8c7e70; /* bordure de champ, 3,9:1 */
+  --color-text: #22170f; /* texte principal, 16,5:1 */
+  --color-text-muted: #6e6053; /* texte secondaire, 6,1:1 */
+  --color-sidebar: #2a1b12; /* menu lateral */
+  --color-sidebar-text: #f4e9d5; /* texte du menu lateral */
+  --color-filter-active: #2b1a10; /* filtre actif */
+
+  /* Statuts: couleur, icone et texte toujours ensemble */
+  --color-success: #1b7a4b; /* texte et icone, 5,3:1 */
+  --color-success-bg: #e5f4ec; /* fond leger */
+  --color-warning: #7a4a00; /* texte et icone, 7,5:1 */
+  --color-warning-bg: #fff4d6; /* fond leger */
+  --color-warning-accent: #f5b800; /* point d'accent */
+  --color-danger: #b42318; /* texte et icone, 6,6:1 */
+  --color-danger-bg: #fdecea; /* fond leger */
+  --color-info: #1d5fa8; /* texte et icone, 6,5:1 */
+  --color-info-bg: #e6effa; /* fond leger */
+  --color-neutral: #4a4039; /* statut neutre (Hors service, Normal) */
+  --color-neutral-bg: #eeeae6; /* fond du statut neutre */
+  --color-ring: #d6cbbb; /* liseré des elements a contour (bouton secondaire, puce, badge neutre) */
+
+  /* Rayons */
+  --radius-sm: 10px; /* petits boutons */
+  --radius: 12px; /* boutons, champs */
+  --radius-lg: 16px; /* cartes, panneaux */
+
+  /* Cibles tactiles (min 44px) */
+  --spacing-touch: 44px; /* minimum */
+  --spacing-field: 48px; /* boutons et champs */
+  --spacing-cta: 56px; /* action Declarer une panne */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Squelette de chargement (maquettes M-Etat-chargement, D-Etats) : reflet lent,
+   coupé si l'utilisateur demande moins d'animations. */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-2) 0%, #ede5d9 50%, var(--color-surface-2) 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: skeleton-shine 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shine {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+/* Ordinateur : pas de rebond élastique en bout de page (Firefox sous Linux, macOS).
+   Le rebond faisait défiler du vide et bouger le menu latéral. Sur mobile, on garde
+   le geste « tirer pour actualiser ». */
+@media (min-width: 64rem) {
+  html { overscroll-behavior-y: none; }
+}
+
+/* Mobile : pendant la saisie (clavier ouvert), la barre du bas et le bouton flottant
+   se cachent. Sinon ils recouvrent le champ et la page défile au-delà de la barre. */
+@media (max-width: 63.99rem) {
+  body:has(:is(input:not([type="checkbox"], [type="radio"]), textarea, select):focus) [data-hide-on-keyboard] {
+    display: none;
+  }
 }
