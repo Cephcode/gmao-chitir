@@ -58,6 +58,9 @@ export async function cloturerIntervention(input: {
   stateAfter: EquipmentState;
   assignedTo: string | null;
   parts: { partId: string; quantity: number }[];
+  // Photos « après » envoyées juste après par le formulaire : il rafraîchit lui-même la
+  // fiche à la fin, pour pouvoir signaler un échec d'envoi.
+  photosToFollow?: boolean;
 }): Promise<InterventionResult> {
   if (!input.workDone.trim()) {
     return { ok: false, error: "Décrivez ce qui a été fait : cela alimente la fiche de vie." };
@@ -86,7 +89,7 @@ export async function cloturerIntervention(input: {
     return { ok: false, error: known ? error.message : "La clôture a échoué. Réessayez." };
   }
 
-  revalidatePath("/", "layout");
+  if (!input.photosToFollow) revalidatePath("/", "layout");
   return { ok: true, message: "Intervention clôturée." };
 }
 

@@ -1,6 +1,8 @@
 // Fiche d'une intervention (M-06b / panneau O-07).
 // Ouverte : résumé de la panne, statut puis formulaire de clôture (sauf lecteur).
 // Terminée : ce qui a été fait, pièces utilisées, état après, qui a clôturé.
+// Photos « avant » (ajout par tous tant qu'elle est ouverte) et « après » (ajout par
+// propriétaire, éditeur, commentateur une fois terminée, ou dans le formulaire de clôture).
 import Link from "next/link";
 import type { Role } from "@/lib/session";
 import { ROLE_LABELS } from "@/lib/session";
@@ -22,6 +24,9 @@ import { ClosingForm } from "@/components/app/interventions/closing-form";
 import { SheetTitle } from "@/components/app/sheet-title";
 import { StatusSelector } from "@/components/app/interventions/status-selector";
 import { STATUS_BADGE, canSetStatus, isOpen } from "@/lib/intervention-status";
+import { InterventionPhotos } from "@/components/app/interventions/intervention-photos";
+import { listPhotos } from "@/lib/photos-server";
+import { failedPhotosMessage } from "@/lib/photos";
 
 const TZ = "Africa/Ouagadougou";
 
@@ -36,19 +41,37 @@ function quand(iso: string) {
 export async function InterventionSheet({
   intervention: i,
   role,
+  userId,
   closeHref,
+  photosFailed = 0,
 }: {
   intervention: InterventionRow;
   role: Role;
+  userId: string;
   closeHref: string;
+  photosFailed?: number; // photos « après » non envoyées à la clôture (?photos_echec=N)
 }) {
   const open = isOpen(i.status);
   const canAct = open && canSetStatus(role);
-  const [technicians, parts, usedParts] = await Promise.all([
+  const [technicians, parts, usedParts, photos] = await Promise.all([
     canAct ? listTechnicians(i.restaurant.id) : Promise.resolve([]),
     canAct ? listPartsFor(i.equipment_id) : Promise.resolve([]),
     open ? Promise.resolve([]) : listUsedParts(i.id),
+    listPhotos(i.id),
   ]);
+  const photosAvant = photos.filter((p) => p.kind === "avant");
+  const photosApres = photos.filter((p) => p.kind === "apres");
+  const photoProps = {
+    interventionId: i.id,
+    restaurantId: i.restaurant.id,
+    userId,
+    canDeleteAny: role === "proprietaire" || role === "editeur",
+  };
+  // Avant : tout rôle (même le lecteur, qui peut déclarer une panne), tant qu'elle est ouverte.
+  const showAvant = open || photosAvant.length > 0;
+  // Après : une fois terminée, pour propriétaire, éditeur, commentateur.
+  const canAddApres = !open && canSetStatus(role);
+  const showApres = !open && (canAddApres || photosApres.length > 0);
 
   const meta = [
     i.restaurant.short_code,
@@ -106,6 +129,10 @@ export async function InterventionSheet({
         )}
       </Card>
 
+      {showAvant && (
+        <InterventionPhotos {...photoProps} kind="avant" title="Photos avant" photos={photosAvant} canAdd={open} />
+      )}
+
       {open && role === "lecteur" && (
         <Alert variant="info" icon="eye">
           Vous êtes en lecture seule : la clôture est faite par le technicien ou un éditeur.
@@ -118,6 +145,7 @@ export async function InterventionSheet({
         <div className="lg:border-t lg:border-border lg:pt-5">
           <ClosingForm
             interventionId={i.id}
+            restaurantId={i.restaurant.id}
             hasEquipment={Boolean(i.equipment_id)}
             initialWorkDone={i.work_done ?? ""}
             initialAssignee={i.assignee?.id ?? null}
@@ -166,6 +194,16 @@ export async function InterventionSheet({
             </div>
           )}
         </Card>
+      )}
+
+      {!open && photosFailed > 0 && canAddApres && (
+        <Alert variant="warning" icon="camera">
+          {failedPhotosMessage(photosFailed, "cloture")}
+        </Alert>
+      )}
+
+      {showApres && (
+        <InterventionPhotos {...photoProps} kind="apres" title="Photos après" photos={photosApres} canAdd={canAddApres} />
       )}
     </article>
   );

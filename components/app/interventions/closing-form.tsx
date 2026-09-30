@@ -5,7 +5,10 @@
 // « Clôturer » termine l'intervention, décompte les pièces du stock et remet la machine
 // dans l'état choisi (fonction SQL cloturer_intervention, une seule transaction).
 // Chaque pièce affiche ce qu'il restera en stock et prévient sous le seuil.
+// Photos « après » (facultatives) : envoyées une fois la clôture faite ; en cas d'échec,
+// la clôture reste faite et la fiche le signale (?photos_echec=N).
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   cloturerIntervention,
   enregistrerIntervention,
@@ -19,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { Field, focusHalo } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { PhotoPicker, type PendingPhoto } from "@/components/app/photos/photos";
+import { sendPhotos } from "@/lib/photos-browser";
 
 const STATES_AFTER: { value: EquipmentState; label: string }[] = [
   { value: "operationnel", label: "Opérationnel" },
@@ -86,6 +91,7 @@ function PartLine({
 
 export function ClosingForm({
   interventionId,
+  restaurantId,
   hasEquipment,
   initialWorkDone,
   initialAssignee,
@@ -93,6 +99,7 @@ export function ClosingForm({
   parts,
 }: {
   interventionId: string;
+  restaurantId: string;
   hasEquipment: boolean; // machine hors liste : pas d'état à remettre
   initialWorkDone: string;
   initialAssignee: string | null;
@@ -106,6 +113,9 @@ export function ClosingForm({
   const [pickerKey, setPickerKey] = useState(0); // remet à zéro la recherche de pièce
   const [result, setResult] = useState<InterventionResult>(null);
   const [pending, startTransition] = useTransition();
+  const [photos, setPhotos] = useState<PendingPhoto[]>([]);
+  const [sendingPhotos, setSendingPhotos] = useState(false);
+  const router = useRouter();
 
   const partById = new Map(parts.map((p) => [p.id, p]));
   // Pièces encore proposables : en stock et pas déjà ajoutées.
@@ -126,15 +136,26 @@ export function ClosingForm({
   const close = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      setResult(
-        await cloturerIntervention({
-          id: interventionId,
-          workDone,
-          stateAfter,
-          assignedTo: assignedTo || null,
-          parts: used,
-        }),
-      );
+      const blobs = photos.map((p) => p.blob);
+      const res = await cloturerIntervention({
+        id: interventionId,
+        workDone,
+        stateAfter,
+        assignedTo: assignedTo || null,
+        parts: used,
+        photosToFollow: blobs.length > 0,
+      });
+      setResult(res);
+      if (!res?.ok || blobs.length === 0) return;
+      setSendingPhotos(true);
+      const { failed } = await sendPhotos(restaurantId, interventionId, "apres", blobs);
+      if (failed > 0) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("photos_echec", String(failed));
+        router.replace(`${url.pathname}${url.search}`);
+      } else {
+        router.refresh();
+      }
     });
   };
 
@@ -198,6 +219,14 @@ export function ClosingForm({
         </div>
       )}
 
+      <PhotoPicker
+        title="Photos après (facultatif)"
+        photos={photos}
+        setPhotos={setPhotos}
+        disabled={pending}
+        hint="Envoyées au moment de la clôture."
+      />
+
       <Field label="Technicien" htmlFor="technician">
         <div className={`relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface ${focusHalo}`}>
           <Icon name="user" className="absolute left-3.5 text-text-muted pointer-events-none" />
@@ -226,7 +255,7 @@ export function ClosingForm({
           Enregistrer
         </Button>
         <Button type="submit" icon="check" disabled={pending} className="flex-[2]">
-          {pending ? "Envoi…" : "Clôturer l'intervention"}
+          {sendingPhotos ? "Envoi des photos…" : pending ? "Envoi…" : "Clôturer l'intervention"}
         </Button>
       </div>
     </form>

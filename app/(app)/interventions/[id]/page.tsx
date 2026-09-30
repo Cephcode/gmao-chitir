@@ -5,6 +5,7 @@ import { getNavCounts, getProfile } from "@/lib/session";
 import { filtersQuery, getIntervention, loadInterventionList, readFilters } from "@/lib/interventions";
 import { InterventionList } from "@/components/app/interventions/intervention-list";
 import { InterventionSheet } from "@/components/app/interventions/intervention-sheet";
+import { readFailedCount } from "@/lib/photos";
 
 export default async function InterventionPage(props: PageProps<"/interventions/[id]">) {
   const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
@@ -31,6 +32,8 @@ export default async function InterventionPage(props: PageProps<"/interventions/
         <InterventionSheet
           intervention={intervention}
           role={profile.role}
+          userId={profile.id}
+          photosFailed={readFailedCount(searchParams.photos_echec)}
           closeHref={`/interventions${filtersQuery(filters)}`}
         />
       </aside>
