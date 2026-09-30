@@ -87,7 +87,7 @@ check "2 clôtures simultanées, même pièce : la 2e est refusée (stock insuff
 check "stock final 0, jamais négatif" "0" "$(psql_ -c "select quantity from parts where id = '$P'")"
 check "quantité = somme des mouvements" "0" "$(psql_ -c "select sum(delta) from stock_movements where part_id = '$P'")"
 check "une seule consommation enregistrée" "1" "$(psql_ -c "select count(*) from intervention_parts where part_id = '$P'")"
-check "statuts : I1 terminée, I2 toujours ouverte" "terminee en_cours" \
+check "statuts : I1 terminée, I2 toujours ouverte" "terminee a_planifier" \
       "$(psql_ -c "select string_agg(status::text, ' ' order by id) from interventions where id in ('$I1', '$I2')")"
 
 # 2. Deux clôtures de la même intervention

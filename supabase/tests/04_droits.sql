@@ -33,7 +33,9 @@ insert into actions values
  (16, 'noter un entretien',                   $$select 1 from (select noter_entretien_fait({EP})) s$$, '{prop1,ed1,com1}'),
  (17, 'modifier le restaurant',               $$with t as (update restaurants set address = 'x' where id = {R} returning 1) select count(*) from t$$, '{prop1}'),
  (18, 'ajouter un restaurant en copiant',     $$select 1 from (select ajouter_restaurant('Copie', 'TSTZ', null, {R})) s$$, '{prop1}'),
- (19, 'voir les comptes du restaurant',       $$select count(*) from users where id = (select user_id from user_restaurants where restaurant_id = {R} and user_id <> auth.uid() limit 1)$$, '{prop1,ed1,com1,lec1}');
+ (19, 'voir les comptes du restaurant',       $$select count(*) from users where id = (select user_id from user_restaurants where restaurant_id = {R} and user_id <> auth.uid() limit 1)$$, '{prop1,ed1,com1,lec1}'),
+ (20, 'changer le statut (fonction)',         $$select 1 from (select changer_statut_intervention({I}, 'en_attente_piece')) s$$, '{prop1,ed1,com1}'),
+ (21, 'changer le statut en direct',          $$with t as (update interventions set status = 'en_attente_piece' where id = {I} returning 1) select count(*) from t$$, '{}');
 
 create temp table portees (portee text, e text, ep text, i text, r text);
 insert into portees values ('son restaurant', 'E3', 'E1', 'I1', 'R1'), ('autre restaurant', 'E2', 'E2', 'I2', 'R2');

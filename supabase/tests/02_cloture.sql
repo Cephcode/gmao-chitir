@@ -13,7 +13,7 @@ select tests.se_deconnecter();
 select is((select state::text from equipments where id = tests.id('E3')), 'en_panne', 'déclaration : machine en panne');
 select is((select status::text || ' ' || type || ' ' || kind || ' ' || (reported_by = tests.id('lec1'))
            from interventions where id = (select v from ctx where k = 'I3')),
-          'en_cours normal correctif true', 'déclaration : intervention ouverte, déclarant enregistré');
+          'a_planifier normal correctif true', 'déclaration par un lecteur : intervention « à planifier », déclarant enregistré');
 select is((select count(*)::int from equipment_events where equipment_id = tests.id('E3') and type = 'panne_declaree'
            and ref_id = (select v from ctx where k = 'I3')), 1, 'déclaration : fiche de vie « Panne déclarée »');
 select tests.se_connecter('lec1');
@@ -123,7 +123,7 @@ select throws_ok($$ select cloturer_intervention((select id from interventions w
                    jsonb_build_array(jsonb_build_object('part_id', gen_random_uuid(), 'quantity', 1))) $$,
                  'P0002', null, 'clôture avec pièce inconnue refusée');
 select tests.se_deconnecter();
-select is((select status::text from interventions where description = 'atomicite'), 'en_cours', 'atomicité : intervention toujours ouverte');
+select is((select status::text from interventions where description = 'atomicite'), 'a_planifier', 'atomicité : intervention toujours ouverte');
 select is((select row(q1, q2, ld, nm, nl, ne, nn)::text from avant),
           (select row((select quantity from parts where id = tests.id('P1')), (select quantity from parts where id = tests.id('P2')),
                       (select last_done_at from maintenance_plans where equipment_id = tests.id('E1')),
