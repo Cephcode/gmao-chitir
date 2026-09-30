@@ -14,6 +14,25 @@ const STORAGE_KEY = "gmao-push-token";
 
 type State = "loading" | "unsupported" | "denied" | "off" | "on";
 
+// Message lisible selon l'erreur Firebase ou du navigateur ; le détail technique est
+// ajouté pour pouvoir diagnostiquer (il ne contient aucune donnée personnelle).
+function explain(err: unknown): string {
+  const e = err as { code?: string; message?: string; name?: string };
+  const detail = [e?.code ?? e?.name, e?.message].filter(Boolean).join(" · ");
+  let hint = "Activation impossible.";
+  if (/push service error|AbortError/i.test(detail)) {
+    hint =
+      "Ce navigateur n'a pas accès au service de notifications push (fréquent avec Chromium ou Brave sous Linux). Essayez Google Chrome ou Firefox.";
+  } else if (/service-worker|serviceworker/i.test(detail)) {
+    hint = "Le service de notifications n'a pas pu s'installer. Rechargez la page et réessayez.";
+  } else if (/token-subscribe-failed|PERMISSION_DENIED|API has not been used|disabled/i.test(detail)) {
+    hint = "Firebase a refusé l'inscription de cet appareil (configuration du projet Firebase).";
+  } else if (/serveur/i.test(detail)) {
+    hint = "L'appareil n'a pas pu être enregistré. Réessayez.";
+  }
+  return detail ? `${hint} Détail : ${detail}` : hint;
+}
+
 function readToken() {
   try {
     return localStorage.getItem(STORAGE_KEY);
@@ -54,11 +73,12 @@ export function PushToggle() {
           return;
         }
         const res = await enregistrerAppareil(token, navigator.userAgent);
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error("enregistrement refusé par le serveur");
         writeToken(token);
         setState("on");
-      } catch {
-        setError("Activation impossible. Réessayez, ou vérifiez la connexion.");
+      } catch (err) {
+        console.error("Activation des notifications push", err);
+        setError(explain(err));
       }
     });
 

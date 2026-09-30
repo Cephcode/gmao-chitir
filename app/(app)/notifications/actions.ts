@@ -67,6 +67,7 @@ export async function enregistrerAppareil(token: string, userAgent: string) {
       { token, user_id: user.id, user_agent: userAgent.slice(0, 300), last_seen_at: new Date().toISOString() },
       { onConflict: "token" },
     );
+  if (error) console.error("Enregistrement de l'appareil (push_tokens)", error.code, error.message);
   return { ok: !error };
 }
 
