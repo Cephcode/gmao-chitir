@@ -130,3 +130,8 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Base hébergée** : 9 migrations (`20260930200000` à `20260930220000`) poussées le 2026-09-30 après feu vert. Inscription libre désactivée aussi dans la console Supabase.
 - **Écarté pour l'instant** : CAPTCHA (proposé pour plus tard), C2 (colonne de présentation de la connexion), S-B2 (secret d'appel de l'Edge Function), S-B4 (expiration du mot de passe temporaire), S-B5 (`safeLink`), S-B8 (journal des actions d'administration), S-B9 (en-têtes, `server-only`, validation), jeton push rattaché à un autre appareil, « Rester connecté ».
 - **Documentation** : `docs/README.md` (installation, variables, base, tests, cron, envoi, push, déploiement, sauvegardes, rôles).
+
+## 2026-09-30 · Pas d'e-mail à la création d'un compte
+- **Décision** : aucun mail n'est envoyé à la personne ajoutée. Le mot de passe temporaire est affiché une seule fois à celui qui crée le compte, qui le transmet.
+- **Raison** : choix du développeur ; fonctionnalité hors périmètre, à proposer et facturer à part si le client la demande.
+- **Pistes si demandé** : mail de bienvenue sans mot de passe (recommandé), mail avec mot de passe temporaire, ou lien d'invitation Supabase. Envoi via l'Edge Function (clé Resend déjà en secret). Nécessite un domaine vérifié chez Resend.
