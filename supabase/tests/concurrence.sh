@@ -2,7 +2,8 @@
 # Concurrence (base LOCALE) : deux sessions psql simultanées.
 #  1. deux clôtures d'interventions différentes sur la même pièce (stock 1) ;
 #  2. deux clôtures de la même intervention ;
-#  3. deux retraits de stock simultanés.
+#  3. deux retraits de stock simultanés ;
+#  4. deux ajouts de photo simultanés quand il ne reste qu'une place (limite par type).
 # Deux sessions distinctes exigent des données validées (COMMIT) : elles sont marquées
 # (restaurant TSTCC, compte concurrence@test.local, ids cccccccc-…) et supprimées à la fin,
 # même en cas d'échec. Aucune notification n'est créée (pas de déclarant, seuil 0), donc
@@ -30,6 +31,8 @@ nettoyer() {
   psql_ <<SQL >/dev/null
 begin;
 delete from notifications where user_id = '$U';
+select set_config('storage.allow_delete_query', 'true', true);
+delete from storage.objects where bucket_id = 'photos' and name like '$R/%';
 delete from stock_movements where part_id = '$P';
 delete from intervention_parts where part_id = '$P';
 delete from maintenance_logs where equipment_id = '$E';
@@ -107,6 +110,22 @@ check "2 retraits simultanés : le 2e attend" "oui" "$B_ATTENTE"
 check "2 retraits simultanés : le 2e est refusé (stock négatif)" "1" "$(grep -c 'ne peut pas être négatif' <<<"$B_OUT")"
 check "stock final 0 = somme des mouvements" "0|0" \
       "$(psql_ -c "select quantity || '|' || (select sum(delta) from stock_movements where part_id = '$P') from parts where id = '$P'")"
+
+# 4. Deux ajouts de photo « avant » simultanés sur I2 (ouverte) : 2 déjà enregistrées, limite 3.
+ph() { echo "$R/$I2/0000000$1-0000-4000-8000-000000000000.jpg"; }
+psql_ -v ON_ERROR_STOP=1 <<SQL >/dev/null
+begin;
+insert into storage.objects (bucket_id, name, owner_id)
+select 'photos', '$R/$I2/0000000' || n || '-0000-4000-8000-000000000000.jpg', '$U' from generate_series(1, 4) n;
+insert into intervention_photos (intervention_id, kind, storage_path, created_by)
+values ('$I2', 'avant', '$(ph 1)', '$U'), ('$I2', 'avant', '$(ph 2)', '$U');
+commit;
+SQL
+duel "select ajouter_photo_intervention('$I2', 'avant', '$(ph 3)')" \
+     "select ajouter_photo_intervention('$I2', 'avant', '$(ph 4)')"
+check "2 ajouts de photo simultanés, une place : le 2e attend le verrou" "oui" "$B_ATTENTE"
+check "2 ajouts de photo simultanés, une place : le 2e est refusé (limite)" "1" "$(grep -c 'Limite atteinte' <<<"$B_OUT")"
+check "3 photos « avant » au plus" "3" "$(psql_ -c "select count(*) from intervention_photos where intervention_id = '$I2' and kind = 'avant'")"
 
 check "aucune notification créée par le test" "$avant_notif" "$(psql_ -c "select count(*) from notifications")"
 check "aucun appel pg_net déclenché" "$avant_net" "$(psql_ -c "select count(*) from net.http_request_queue")"
