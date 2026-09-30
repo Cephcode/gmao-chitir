@@ -37,6 +37,11 @@ run_sql() {
 }
 
 if [[ $# -gt 0 ]]; then
+  # Nom d'un scénario existant seulement (lettres, chiffres, _) : pas de chemin arbitraire.
+  if [[ ! "$1" =~ ^[A-Za-z0-9_]+$ || ! -f "$HERE/$1.sql" ]]; then
+    echo "Scénario inconnu : $1 (attendu : un nom de fichier de $HERE, sans .sql)" >&2
+    exit 2
+  fi
   run_sql "$1"
 else
   for f in "$HERE"/[0-9]*.sql; do run_sql "$(basename "$f" .sql)"; done

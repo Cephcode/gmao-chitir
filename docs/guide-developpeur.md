@@ -192,11 +192,11 @@ Ordre à respecter pour une livraison qui touche la base : **migrations, puis Ed
 
 ```bash
 supabase start                       # base locale (Docker)
-bash supabase/tests/run.sh           # tout (635 tests au 2026-09-30)
+bash supabase/tests/run.sh           # tout (639 tests au 2026-09-30)
 bash supabase/tests/run.sh 08_statuts   # un seul fichier
 ```
 
-- Un fichier par sujet dans `supabase/tests/` : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, plus `concurrence.sh`.
+- Un fichier par sujet dans `supabase/tests/` : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, `11_comptes`, plus `concurrence.sh`.
 - Chaque scénario tourne dans une transaction annulée : rien ne reste en base.
 - Les comptes de test sont créés dans `_fixture.sql`.
 - **Après chaque changement de base ou de droits, relancer toute la suite.** Si un test casse, se demander d'abord si c'est le code ou le test qui a tort.

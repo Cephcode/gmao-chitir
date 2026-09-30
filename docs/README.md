@@ -90,8 +90,8 @@ bash supabase/tests/run.sh            # tout : scénarios SQL (pgTAP), concurren
 bash supabase/tests/run.sh 01_stock   # un seul scénario SQL
 ```
 
-- Résultat attendu au 2026-09-30 : **635 réussis, 0 échoué**.
-- Fichiers : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, `concurrence.sh`.
+- Résultat attendu au 2026-09-30 : **639 réussis, 0 échoué**.
+- Fichiers : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, `11_comptes`, `concurrence.sh`.
 - Scénarios SQL dans `supabase/tests/`, chacun en transaction annulée : aucune donnée ne reste, rien n'est envoyé. Le script vérifie à la fin qu'aucune donnée de test ne reste.
 - Règles pures (droits d'administration, entretien, catégories, photos) : `tests/*.test.ts`, lancés par `node --test` depuis le script.
 - Le script refuse de tourner si le conteneur Docker local est absent.
