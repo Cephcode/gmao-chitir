@@ -1,5 +1,5 @@
 // Notifications : les siennes uniquement (RLS). Elles sont créées par les fonctions SQL
-// (panne, urgence, clôture, stock bas) et, plus tard, par la tâche quotidienne (entretiens).
+// (panne, urgence, changement de statut, clôture, stock bas) et, plus tard, par la tâche quotidienne (entretiens).
 import { createClient } from "@/lib/supabase/server";
 import { aujourdhui, dateCourte, plusJours } from "@/lib/format";
 import type { IconName } from "@/components/icons";
@@ -10,7 +10,8 @@ export type NotificationType =
   | "entretien_prevu"
   | "entretien_retard"
   | "stock_bas"
-  | "reparation";
+  | "reparation"
+  | "statut_intervention";
 
 export type NotificationRow = {
   id: string;
@@ -29,6 +30,7 @@ export const TYPE_STYLE: Record<NotificationType, { icon: IconName; tone: string
   entretien_retard: { icon: "clock", tone: "bg-warning-bg text-warning" },
   stock_bas: { icon: "down", tone: "bg-warning-bg text-warning" },
   reparation: { icon: "check", tone: "bg-success-bg text-success" },
+  statut_intervention: { icon: "refresh", tone: "bg-info-bg text-info" },
 };
 
 // Catégories du filtre (colonne de gauche sur ordinateur).
@@ -38,6 +40,7 @@ export const CATEGORIES: { value: string; label: string; icon: IconName; types: 
   { value: "entretiens", label: "Entretiens", icon: "clock", types: ["entretien_prevu", "entretien_retard"] },
   { value: "stock", label: "Stock", icon: "down", types: ["stock_bas"] },
   { value: "reparations", label: "Réparations", icon: "check", types: ["reparation"] },
+  { value: "suivi", label: "Suivi", icon: "refresh", types: ["statut_intervention"] },
 ];
 
 // Réglages « Mes alertes » : un interrupteur par type (activé par défaut).
@@ -48,6 +51,7 @@ export const SETTINGS: { type: NotificationType; label: string; hint: string }[]
   { type: "entretien_retard", label: "Entretien en retard", hint: "Chaque matin à 7 h" },
   { type: "stock_bas", label: "Stock sous le seuil", hint: "Une fois par pièce" },
   { type: "reparation", label: "Réparations", hint: "Quand une machine que j'ai signalée est réparée" },
+  { type: "statut_intervention", label: "Suivi de mes pannes", hint: "Quand le statut d'une panne que j'ai signalée change" },
 ];
 
 export async function listNotifications(): Promise<NotificationRow[]> {
