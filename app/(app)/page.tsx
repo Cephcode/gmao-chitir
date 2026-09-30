@@ -203,7 +203,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           href={`/interventions?type=urgence${filterQuery}`}
-          label="Urgences ouvertes"
+          label="Urgences en cours"
           value={urgences.length}
           icon="bolt"
           tone="danger"

@@ -59,7 +59,9 @@ export function InterventionList({
     : [{ type: null, label: "", rows }];
 
   const tabs = [
-    { statut: "ouvertes" as const, label: `Ouvertes (${counts.ouvertes})`, desktopOnly: false },
+    // Libellé « En cours » demandé par le client : l'onglet regroupe toutes les interventions
+    // non terminées (à planifier, en cours, en attente de pièce).
+    { statut: "ouvertes" as const, label: `En cours (${counts.ouvertes})`, desktopOnly: false },
     { statut: "terminee" as const, label: `Terminées (${counts.terminee})`, desktopOnly: false },
     { statut: "toutes" as const, label: "Toutes", desktopOnly: true },
   ];
@@ -160,7 +162,7 @@ export function InterventionList({
           </span>
           <div>
             <div className="font-semibold">
-              {filters.statut === "ouvertes" && !filters.etat ? "Aucune intervention ouverte" : "Aucune intervention"}
+              {filters.statut === "ouvertes" && !filters.etat ? "Aucune intervention en cours" : "Aucune intervention"}
             </div>
             <div className="text-text-muted text-[14px]">
               {filters.statut === "ouvertes" && !filters.etat
