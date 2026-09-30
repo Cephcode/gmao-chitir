@@ -5,6 +5,7 @@
 // Ne propose que les restaurants accessibles (la liste vient du serveur, filtrée par les RLS).
 import { usePathname, useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
+import { focusHaloInset } from "@/components/ui/field";
 
 export function RestaurantSelect({
   restaurants,
@@ -17,7 +18,7 @@ export function RestaurantSelect({
   const pathname = usePathname();
 
   return (
-    <label className="relative flex items-center h-field rounded bg-surface shadow-[inset_0_0_0_1.5px_var(--color-ring)] hover:bg-surface-2 focus-within:shadow-[inset_0_0_0_2px_var(--color-orange)]">
+    <label className={`relative flex items-center h-field rounded bg-surface shadow-[inset_0_0_0_1.5px_var(--color-ring)] hover:bg-surface-2 ${focusHaloInset}`}>
       <span className="sr-only">Restaurant</span>
       <Icon name="store" className="absolute left-3.5 text-orange-text pointer-events-none" />
       <select

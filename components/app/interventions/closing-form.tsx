@@ -17,7 +17,7 @@ import { Icon } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
-import { Field } from "@/components/ui/field";
+import { Field, focusHalo } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
 const STATES_AFTER: { value: EquipmentState; label: string }[] = [
@@ -199,7 +199,7 @@ export function ClosingForm({
       )}
 
       <Field label="Technicien" htmlFor="technician">
-        <div className="relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface focus-within:border-orange">
+        <div className={`relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface ${focusHalo}`}>
           <Icon name="user" className="absolute left-3.5 text-text-muted pointer-events-none" />
           <select
             id="technician"

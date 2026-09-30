@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/icons";
+import { focusHaloInset } from "@/components/ui/field";
 
 export type FilterChipConfig = {
   name: string; // paramètre d'URL
@@ -31,7 +32,7 @@ function FilterChip({
         active
           ? "bg-filter-active text-background"
           : "bg-surface text-text shadow-[inset_0_0_0_1.5px_var(--color-ring)] hover:bg-surface-2"
-      } focus-within:outline-2 focus-within:outline-orange`}
+      } ${focusHaloInset}`}
     >
       <span>
         {active ? (
@@ -98,7 +99,7 @@ export function UrlFilters({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="relative flex items-center h-field rounded bg-surface shadow-[inset_0_0_0_1.5px_var(--color-border-strong)] focus-within:shadow-[inset_0_0_0_2px_var(--color-orange)] lg:max-w-sm">
+      <label className={`relative flex items-center h-field rounded bg-surface shadow-[inset_0_0_0_1.5px_var(--color-border-strong)] ${focusHaloInset} lg:max-w-sm`}>
         <span className="sr-only">{searchLabel}</span>
         <Icon name="search" className="absolute left-3.5 text-text-muted pointer-events-none" />
         <input

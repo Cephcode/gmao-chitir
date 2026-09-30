@@ -13,7 +13,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
-import { Field, TextInput } from "@/components/ui/field";
+import { Field, TextInput, focusHalo } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
 export type Machine = {
@@ -311,7 +311,7 @@ export function DeclareForm({
             <SectionTitle n={1}>Quelle machine ?</SectionTitle>
             <div className="grid grid-cols-[200px_1fr] gap-3">
               <Field label="Restaurant" htmlFor="panne-restaurant">
-                <div className="relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface focus-within:border-orange">
+                <div className={`relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface ${focusHalo}`}>
                   <select
                     id="panne-restaurant"
                     value={v.restaurantId}

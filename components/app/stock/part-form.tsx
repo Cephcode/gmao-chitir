@@ -10,7 +10,7 @@ import { enregistrerPiece, supprimerPiece, type PartInput, type StockResult } fr
 import { Icon } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Field, TextInput } from "@/components/ui/field";
+import { Field, TextInput, focusHalo } from "@/components/ui/field";
 
 type Machine = { id: string; code: string; name: string; restaurant: string };
 
@@ -165,7 +165,7 @@ export function PartForm({
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Unité" htmlFor="part-unit">
-              <div className="relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface focus-within:border-orange">
+              <div className={`relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface ${focusHalo}`}>
                 <select id="part-unit" value={v.unit} onChange={(e) => set("unit", e.target.value)} className="appearance-none w-full h-full bg-transparent pl-3.5 pr-10 text-[16px] text-text outline-none cursor-pointer">
                   {UNIT_OPTIONS.map((u) => (
                     <option key={u.value} value={u.value}>{u.label}</option>

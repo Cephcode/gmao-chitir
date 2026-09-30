@@ -18,7 +18,7 @@ import { Icon } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboValue } from "@/components/ui/combobox";
-import { Field, TextInput } from "@/components/ui/field";
+import { Field, TextInput, focusHalo } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
 type Options = {
@@ -162,7 +162,7 @@ export function EquipmentForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Restaurant" htmlFor="eq-restaurant" error={fieldError("restaurant")}>
                 {options.restaurants.length > 1 ? (
-                  <div className="relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface focus-within:border-orange">
+                  <div className={`relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface ${focusHalo}`}>
                     <Icon name="store" className="absolute left-3.5 text-orange-text pointer-events-none" />
                     <select
                       id="eq-restaurant"

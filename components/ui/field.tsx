@@ -48,6 +48,16 @@ type TextInputProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean;
 };
 
+// Focus des champs (maquette p02) : liseré orange et halo orange pâle.
+// Partagé avec les listes déroulantes et recherches faites à la main, pour que le focus
+// y soit aussi visible que sur TextInput.
+export const focusHalo =
+  "focus-within:border-orange focus-within:shadow-[0_0_0_3px_var(--color-orange-selected)]";
+// Même focus pour les éléments dont le liseré est une ombre intérieure (sélecteur de
+// restaurant, recherche, puces de filtre).
+export const focusHaloInset =
+  "focus-within:shadow-[inset_0_0_0_2px_var(--color-orange),0_0_0_3px_var(--color-orange-selected)]";
+
 export function TextInput({
   leadingIcon,
   trailingIcon,
@@ -58,7 +68,7 @@ export function TextInput({
   // Liseré: gris fonce au repos, orange au focus (halo), rouge si invalide.
   const border = invalid
     ? "border-danger"
-    : "border-border-strong focus-within:border-orange focus-within:shadow-[0_0_0_3px_var(--color-orange-selected)]";
+    : `border-border-strong ${focusHalo}`;
   return (
     <div
       className={`flex items-center gap-2.5 h-field rounded border-[1.5px] bg-surface px-3.5 text-[16px] text-text transition-shadow ${border} ${className}`}
