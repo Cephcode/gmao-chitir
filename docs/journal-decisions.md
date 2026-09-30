@@ -93,3 +93,10 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Identifiant** : e-mail ou téléphone, normalisé de la même façon à la création et à la connexion (`lib/identifiant.ts` : 8 chiffres → +226). La connexion par téléphone demande le fournisseur « Phone » activé dans Supabase (aucun SMS envoyé).
 - **Restaurants** : migration `20260930150000_ajouter_restaurant.sql`, fonction `ajouter_restaurant` (propriétaire, code court 2 à 6 caractères, une transaction) avec copie facultative de la liste d'un restaurant : codes régénérés (CTR1-FRG-01 → CTR3-FRG-01), machines opérationnelles, plans repris sans historique, pièces « va avec » reprises. Testée en local (5 scénarios).
 - **Mobile** : lien Administration en bas du tableau de bord (la barre du bas n'a que 4 onglets).
+- **Base hébergée** : migration `ajouter_restaurant` poussée le 2026-09-30 après feu vert.
+
+## 2026-09-30 · Titres des notifications et tâche quotidienne (étape 7a)
+- **Architecture de l'étape 7** (choix du développeur) : tâche du matin en SQL planifiée par pg_cron dans Supabase ; envoi mail et push par une Edge Function déclenchée à chaque notification (7b) ; push dans l'application (7c). Écarté : routes Next + cron Vercel.
+- **Titres** : « Urgence : Grande friteuse 2 portes, CTR1 » / « Déclarée par Awa · Ne chauffe pas » ; « … réparée, CTR1 » / « Clôturée par Salif · … » ; « … sous le seuil » / « Il reste 2, seuil 5 » (lien vers la fiche pièce). `declarer_panne`, `cloturer_intervention` et `mouvement_stock` reprises à l'identique de leur dernière version, seules ces lignes changent.
+- **Tâche quotidienne** : `taches_quotidiennes()` à 7 h UTC (heure de Ouagadougou) via pg_cron : « entretien à prévoir » 3 jours avant, « entretien en retard » chaque matin, pour propriétaires, éditeurs et commentateurs du restaurant, selon leurs réglages ; machines hors service exclues ; au plus une notification par personne, machine, type et jour. Non appelable par les utilisateurs.
+- **Vérifié** en local : titres, rappels, réglage coupé respecté, hors service exclu, pas de doublon, planification enregistrée.
