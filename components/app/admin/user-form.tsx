@@ -141,7 +141,7 @@ export function UserForm({
 
               {creating ? (
                 <Field
-                  label="E-mail ou numéro de téléphone"
+                  label="E-mail"
                   htmlFor="acc-id"
                   error={fieldError("identifiant")}
                   hint="Sert à se connecter. Un mot de passe temporaire sera généré."
@@ -150,7 +150,9 @@ export function UserForm({
                     id="acc-id"
                     value={v.identifiant}
                     onChange={(e) => set("identifiant", e.target.value)}
-                    placeholder="nom@exemple.com ou 70 12 34 56"
+                    type="email"
+                    inputMode="email"
+                    placeholder="nom@exemple.com"
                     autoComplete="off"
                     invalid={Boolean(fieldError("identifiant"))}
                     autoFocus

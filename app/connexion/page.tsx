@@ -1,6 +1,6 @@
 "use client";
 
-// Connexion en une seule étape (e-mail/téléphone + mot de passe), sans choix de rôle.
+// Connexion en une seule étape (e-mail + mot de passe), sans choix de rôle.
 import { useActionState, useState } from "react";
 import Image from "next/image";
 import { seConnecter, type ConnexionState } from "./actions";
@@ -41,11 +41,12 @@ export default function ConnexionPage() {
           <form action={formAction} className="flex flex-col gap-4">
             {state?.error && <Alert variant="danger">{state.error}</Alert>}
 
-            <Field label="E-mail ou numéro de téléphone" htmlFor="identifiant">
+            <Field label="E-mail" htmlFor="identifiant">
               <TextInput
                 id="identifiant"
                 name="identifiant"
-                type="text"
+                type="email"
+                inputMode="email"
                 autoComplete="username"
                 autoCapitalize="none"
                 required

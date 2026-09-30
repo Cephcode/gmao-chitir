@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normaliserIdentifiant } from "@/lib/identifiant";
+import { normaliserEmail } from "@/lib/identifiant";
 import type { Role } from "@/lib/session";
 import {
   type AdminUser,
@@ -63,26 +63,24 @@ export async function creerCompte(input: Assignment & { identifiant: string; fir
   if (!actor || (actor.role !== "proprietaire" && actor.role !== "editeur")) {
     return { ok: false, error: "Votre rôle ne permet pas de créer des comptes." };
   }
-  const id = normaliserIdentifiant(input.identifiant);
-  if (!id) {
-    return { ok: false, error: "Saisissez un e-mail valide ou un numéro de téléphone (8 chiffres ou +226…).", field: "identifiant" };
-  }
+  const email = normaliserEmail(input.identifiant);
+  if (!email) return { ok: false, error: "Saisissez un e-mail valide.", field: "identifiant" };
   const allIds = (await listRestaurants()).map((r) => r.id);
   const refus = checkAssignment(actor, input, allIds);
   if (refus) return { ok: false, error: refus, field: refus.includes("rôle") ? "role" : "restaurants" };
 
   const admin = createAdminClient();
   const tempPassword = motDePasseTemporaire();
-  const { data: created, error: authError } = await admin.auth.admin.createUser(
-    "email" in id
-      ? { email: id.email, password: tempPassword, email_confirm: true }
-      : { phone: id.phone, password: tempPassword, phone_confirm: true },
-  );
+  const { data: created, error: authError } = await admin.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true,
+  });
   if (authError || !created.user) {
     const exists = /already|registered|exists/i.test(authError?.message ?? "");
     return {
       ok: false,
-      error: exists ? "Un compte existe déjà avec cet identifiant." : "Le compte n'a pas pu être créé. Réessayez.",
+      error: exists ? "Un compte existe déjà avec cet e-mail." : "Le compte n'a pas pu être créé. Réessayez.",
       field: exists ? "identifiant" : undefined,
     };
   }
@@ -91,8 +89,7 @@ export async function creerCompte(input: Assignment & { identifiant: string; fir
   const { error: profileError } = await admin.from("users").insert({
     id: userId,
     first_name: input.firstName.trim() || null,
-    email: "email" in id ? id.email : null,
-    phone: "phone" in id ? id.phone : null,
+    email,
     role: input.role,
     all_restaurants: input.allRestaurants,
     must_change_password: true,
@@ -108,7 +105,7 @@ export async function creerCompte(input: Assignment & { identifiant: string; fir
   }
 
   revalidatePath("/admin", "layout");
-  return { ok: true, tempPassword, identifiant: "email" in id ? id.email : id.phone };
+  return { ok: true, tempPassword, identifiant: email };
 }
 
 export async function modifierCompte(input: Assignment & { id: string; firstName: string }): Promise<AccountResult> {
