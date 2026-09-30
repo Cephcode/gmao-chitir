@@ -7,7 +7,6 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { declarerPanne, type PanneInput, type PanneState } from "@/app/(app)/panne/actions";
-import { categoryIcon } from "@/lib/equipment-icon";
 import { depuis } from "@/lib/format";
 import { Icon, type IconName } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
@@ -23,7 +22,7 @@ export type Machine = {
   code: string;
   restaurantId: string;
   categoryName: string | null;
-  categoryCode: string | null;
+  icon: IconName; // icône de la catégorie (lib/equipment-icon.ts)
 };
 export type OpenPanne = { id: string; reportedAt: string; type: string };
 
@@ -250,7 +249,7 @@ export function DeclareForm({
                         className="w-full flex items-center gap-3 px-3.5 py-3 min-h-[64px] text-left bg-transparent border-0 cursor-pointer hover:bg-background"
                       >
                         <span className="size-10 rounded bg-surface-2 flex items-center justify-center text-[#4E2F21] shrink-0">
-                          <Icon name={categoryIcon(m.categoryCode)} />
+                          <Icon name={m.icon} />
                         </span>
                         <span className="flex-1 min-w-0">
                           <span className="block font-semibold text-[15px] truncate">{m.name}</span>
@@ -294,7 +293,7 @@ export function DeclareForm({
           {step === 2 && (
             <div className="lg:hidden flex items-center gap-3 p-3.5 rounded-lg bg-surface shadow-[0_0_0_1px_var(--color-border)]">
               <span className="size-10 rounded bg-surface-2 flex items-center justify-center text-[#4E2F21] shrink-0">
-                <Icon name={categoryIcon(machine?.categoryCode)} />
+                <Icon name={machine?.icon ?? "wrench"} />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[15px] truncate">{machine?.name ?? v.freeText}</div>

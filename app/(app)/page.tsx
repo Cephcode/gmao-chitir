@@ -7,7 +7,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getNavCounts, getProfile, ROLE_LABELS } from "@/lib/session";
 import { aujourdhui, dateCourte, depuis, plusJours } from "@/lib/format";
-import { categoryIcon } from "@/lib/equipment-icon";
+import { type CategoryRef, categoryIcon } from "@/lib/equipment-icon";
 import { canAccessAdmin } from "@/lib/admin";
 import { Icon, type IconName } from "@/components/icons";
 import { Card } from "@/components/ui/card";
@@ -32,13 +32,13 @@ type OpenIntervention = {
   reported_at: string;
   restaurant_id: string;
   equipment_free_text: string | null;
-  equipments: { name: string; categories: { code: string } | null } | null;
+  equipments: { name: string; categories: CategoryRef } | null;
 };
 type Plan = {
   id: string;
   next_due_at: string;
   equipment_id: string;
-  equipments: { name: string; restaurant_id: string; categories: { code: string } | null } | null;
+  equipments: { name: string; restaurant_id: string; categories: CategoryRef } | null;
 };
 type Part = { id: string; name: string; quantity: number; min_threshold: number };
 
@@ -72,13 +72,13 @@ export default async function TableauDeBord(props: PageProps<"/">) {
     supabase
       .from("interventions")
       .select(
-        "id, type, status, description, symptoms, reported_at, restaurant_id, equipment_free_text, equipments(name, categories(code))",
+        "id, type, status, description, symptoms, reported_at, restaurant_id, equipment_free_text, equipments(name, categories(*))",
       )
       .neq("status", "terminee") // ouvertes : à planifier, en cours, en attente de pièce
       .order("reported_at", { ascending: true }),
     supabase
       .from("maintenance_plans")
-      .select("id, next_due_at, equipment_id, equipments(name, restaurant_id, categories(code))")
+      .select("id, next_due_at, equipment_id, equipments(name, restaurant_id, categories(*))")
       .not("next_due_at", "is", null)
       .lte("next_due_at", in7days)
       .order("next_due_at"),
@@ -113,7 +113,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
   const interventionItem = (i: OpenIntervention): PriorityItem => ({
     key: `i-${i.id}`,
     href: `/interventions/${i.id}`,
-    icon: categoryIcon(i.equipments?.categories?.code),
+    icon: categoryIcon(i.equipments?.categories),
     name: i.equipments?.name ?? i.equipment_free_text ?? "Machine non identifiée",
     sub: [
       codeOf.get(i.restaurant_id),
@@ -131,7 +131,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
     ...overdue.map((p) => ({
       key: `p-${p.id}`,
       href: `/equipements/${p.equipment_id}`,
-      icon: categoryIcon(p.equipments?.categories?.code),
+      icon: categoryIcon(p.equipments?.categories),
       name: p.equipments?.name ?? "Équipement",
       sub: `${codeOf.get(p.equipments?.restaurant_id ?? "") ?? ""} · Entretien prévu le ${dateCourte(p.next_due_at)}`,
       status: "enRetard" as StatusKey,
@@ -332,7 +332,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
                   <ListRow
                     key={p.id}
                     href={`/equipements/${p.equipment_id}`}
-                    icon={categoryIcon(p.equipments?.categories?.code)}
+                    icon={categoryIcon(p.equipments?.categories)}
                     name={p.equipments?.name ?? "Équipement"}
                     sub={`${codeOf.get(p.equipments?.restaurant_id ?? "") ?? ""} · ${dateCourte(p.next_due_at)}`}
                   />

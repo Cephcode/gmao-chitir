@@ -24,7 +24,7 @@ export type EquipmentRow = {
   serial_number: string | null;
   installed_at: string | null;
   restaurant: { id: string; short_code: string; name: string };
-  category: { id: string; name: string; code: string } | null;
+  category: { id: string; name: string; code: string; icon?: string | null } | null;
   brand: { id: string; name: string } | null;
   plan: Plan | null;
 };
@@ -123,9 +123,11 @@ function one<T>(v: T | T[] | null | undefined): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
 }
 
+// categories(*) plutôt que categories(id, name, code, icon) : la colonne icon arrive par
+// migration (phase 5) et une colonne nommée absente ferait échouer toute la requête.
 const EQUIPMENT_SELECT =
   "id, code, name, state, model, serial_number, installed_at, " +
-  "restaurants(id, short_code, name), categories(id, name, code), brands(id, name), " +
+  "restaurants(id, short_code, name), categories(*), brands(id, name), " +
   "maintenance_plans(task, frequency, last_done_at, next_due_at)";
 
 type RawEquipment = Omit<EquipmentRow, "restaurant" | "category" | "brand" | "plan"> & {

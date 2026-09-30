@@ -123,7 +123,7 @@ export function EquipmentList({
               <Card key={e.id} padded={false} className="overflow-hidden">
                 <ListRow
                   href={`/equipements/${e.id}${query}`}
-                  icon={categoryIcon(e.category?.code)}
+                  icon={categoryIcon(e.category)}
                   name={e.name}
                   sub={[e.restaurant.short_code, e.category?.name].filter(Boolean).join(" · ")}
                   badge={<StatusBadge status={STATE_BADGE[e.state]} />}

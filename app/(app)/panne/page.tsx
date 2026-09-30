@@ -2,6 +2,7 @@
 // ?equipement=ID : machine déjà choisie (depuis sa fiche), on arrive à l'étape 2 sur mobile.
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/session";
+import { categoryIcon } from "@/lib/equipment-icon";
 import { canSetStatus } from "@/lib/intervention-status";
 import { DeclareForm, type Machine, type OpenPanne } from "@/components/app/panne/declare-form";
 
@@ -10,7 +11,7 @@ type Row = {
   name: string;
   code: string;
   restaurant_id: string;
-  categories: { name: string; code: string } | null;
+  categories: { name: string; code: string; icon?: string | null } | null;
 };
 
 export default async function PannePage(props: PageProps<"/panne">) {
@@ -21,7 +22,7 @@ export default async function PannePage(props: PageProps<"/panne">) {
   const [profile, restaurantsRes, equipmentsRes, openRes] = await Promise.all([
     getProfile(),
     supabase.from("restaurants").select("id, short_code, name").order("short_code"),
-    supabase.from("equipments").select("id, name, code, restaurant_id, categories(name, code)"),
+    supabase.from("equipments").select("id, name, code, restaurant_id, categories(*)"),
     supabase
       .from("interventions")
       .select("id, equipment_id, reported_at, type")
@@ -36,7 +37,7 @@ export default async function PannePage(props: PageProps<"/panne">) {
     code: e.code,
     restaurantId: e.restaurant_id,
     categoryName: e.categories?.name ?? null,
-    categoryCode: e.categories?.code ?? null,
+    icon: categoryIcon(e.categories),
   }));
 
   // Dernière panne ouverte par machine (pour prévenir d'un doublon).

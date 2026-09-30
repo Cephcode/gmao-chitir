@@ -202,7 +202,7 @@ export async function EquipmentSheet({
 
       <header className="flex items-start gap-3">
         <div className="size-14 rounded bg-surface-2 flex items-center justify-center text-[#4E2F21] shrink-0 lg:hidden">
-          <Icon name={categoryIcon(e.category?.code)} />
+          <Icon name={categoryIcon(e.category)} />
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           <SheetTitle>{e.name}</SheetTitle>
