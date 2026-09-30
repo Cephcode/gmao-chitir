@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getNavCounts, getProfile, ROLE_LABELS } from "@/lib/session";
 import { aujourdhui, dateCourte, depuis, plusJours } from "@/lib/format";
 import { categoryIcon } from "@/lib/equipment-icon";
+import { canAccessAdmin } from "@/lib/admin";
 import { Icon, type IconName } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusKey } from "@/components/ui/status-badge";
@@ -299,6 +300,18 @@ export default async function TableauDeBord(props: PageProps<"/">) {
                 </Link>
               ))}
             </section>
+          )}
+
+          {/* Mobile : accès à l'administration (absente de la barre du bas) */}
+          {profile && canAccessAdmin(profile.role) && (
+            <Link
+              href="/admin/utilisateurs"
+              className="lg:hidden flex items-center gap-3 p-4 rounded-lg bg-surface shadow-[0_0_0_1px_var(--color-border)] text-text"
+            >
+              <Icon name="shield" />
+              <span className="flex-1 font-semibold">Administration</span>
+              <Icon name="chevronRight" className="text-text-muted" />
+            </Link>
           )}
 
           {/* Ordinateur : entretiens des 7 jours */}

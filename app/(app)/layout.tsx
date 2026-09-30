@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getNavCounts, getProfile, ROLE_LABELS } from "@/lib/session";
 import { Sidebar, BottomNav, FabPanne } from "@/components/app/nav";
+import { canAccessAdmin } from "@/lib/admin";
 
 export default async function AppLayout({
   children,
@@ -20,7 +21,7 @@ export default async function AppLayout({
       <Sidebar
         firstName={profile.first_name ?? ""}
         roleLabel={ROLE_LABELS[profile.role]}
-        isOwner={profile.role === "proprietaire"}
+        canAdmin={canAccessAdmin(profile.role)}
         urgences={urgences}
         unread={unread}
       />

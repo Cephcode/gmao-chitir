@@ -40,13 +40,13 @@ function CountBadge({ value, label }: { value: number; label: string }) {
 export function Sidebar({
   firstName,
   roleLabel,
-  isOwner,
+  canAdmin,
   urgences,
   unread,
 }: {
   firstName: string;
   roleLabel: string;
-  isOwner: boolean;
+  canAdmin: boolean; // propriétaire ou éditeur (délégation des comptes)
   urgences: number;
   unread: number;
 }) {
@@ -58,7 +58,7 @@ export function Sidebar({
         : i,
     ),
     { href: "/notifications", label: "Notifications", short: "Notifications", icon: "bell", badge: unread, badgeLabel: `${unread} non lues` },
-    ...(isOwner
+    ...(canAdmin
       ? [{ href: "/admin/utilisateurs", label: "Administration", short: "Admin", icon: "shield" as IconName }]
       : []),
   ];

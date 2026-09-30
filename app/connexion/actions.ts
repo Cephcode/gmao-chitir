@@ -6,6 +6,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normaliserIdentifiant } from "@/lib/identifiant";
 
 export type ConnexionState = { error: string } | null;
 
@@ -22,10 +23,10 @@ export async function seConnecter(
 
   const supabase = await createClient();
 
-  // Un identifiant avec « @ » est un e-mail, sinon un numéro de téléphone.
-  const credentials = identifiant.includes("@")
-    ? { email: identifiant, password: motDePasse }
-    : { phone: identifiant, password: motDePasse };
+  // E-mail ou téléphone, normalisé comme à la création du compte (+226… pour 8 chiffres).
+  const id = normaliserIdentifiant(identifiant);
+  if (!id) return { error: "Identifiant ou mot de passe incorrect." };
+  const credentials = { ...id, password: motDePasse };
 
   const { data, error } = await supabase.auth.signInWithPassword(credentials);
 
