@@ -13,8 +13,11 @@ const REASON_LABEL = { livraison: "Livraison", ajustement: "Correction d'inventa
 
 function Chip({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="h-8 px-3 inline-flex items-center rounded-sm bg-surface-2 text-[13px] font-semibold text-text hover:bg-border">
-      {children}
+    // Lien de 44 px de haut sur mobile (cible tactile) ; la puce visible garde 32 px.
+    <Link href={href} className="group inline-flex items-center min-h-11 lg:min-h-0">
+      <span className="h-8 px-3 inline-flex items-center rounded-sm bg-surface-2 text-[13px] font-semibold text-text group-hover:bg-border">
+        {children}
+      </span>
     </Link>
   );
 }
@@ -79,7 +82,7 @@ export async function PartSheet({ part: p, role, query }: { part: PartRow; role:
         <div className="flex flex-col gap-2 py-3">
           <span className="text-text-muted text-[15px]">Va avec (prévu)</span>
           {p.planned.length ? (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-x-1.5 lg:gap-y-1.5">
               {p.planned.map((m) => (
                 <Chip key={m.id} href={`/equipements/${m.id}`}>{m.code}</Chip>
               ))}
@@ -91,7 +94,7 @@ export async function PartSheet({ part: p, role, query }: { part: PartRow; role:
         <div className="flex flex-col gap-2 py-3">
           <span className="text-text-muted text-[15px]">Utilisée sur (interventions)</span>
           {usedOn.length ? (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-x-1.5 lg:gap-y-1.5">
               {usedOn.map((m) => (
                 <Chip key={m.id} href={`/equipements/${m.id}`}>
                   {m.code} × {m.quantity}

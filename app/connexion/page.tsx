@@ -66,7 +66,7 @@ export default function ConnexionPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="self-start inline-flex items-center gap-2 text-orange-text text-sm font-semibold -mt-2"
+              className="self-start inline-flex items-center gap-2 min-h-11 pr-2 -mt-4 -mb-3 text-orange-text text-sm font-semibold"
             >
               <Icon name="eye" size={16} />
               {showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}

@@ -44,16 +44,19 @@ function MachinePicker({
   return (
     <div className="flex flex-col gap-2">
       {selected.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-x-1.5 lg:gap-y-1.5">
           {selected.map((m) => (
             <button
               key={m.id}
               type="button"
               onClick={() => toggle(m.id)}
               aria-label={`Retirer ${m.code}`}
-              className="inline-flex items-center gap-1 h-8 pl-3 pr-2 rounded-full bg-surface-2 border-0 text-[13px] font-semibold text-text cursor-pointer hover:bg-border"
+              // Bouton de 44 px de haut sur mobile (cible tactile) ; la puce visible garde 32 px.
+              className="group inline-flex items-center min-h-11 lg:min-h-0 p-0 bg-transparent border-0 cursor-pointer"
             >
-              {m.code} <Icon name="x" size={14} />
+              <span className="inline-flex items-center gap-1 h-8 pl-3 pr-2 rounded-full bg-surface-2 text-[13px] font-semibold text-text group-hover:bg-border">
+                {m.code} <Icon name="x" size={14} />
+              </span>
             </button>
           ))}
         </div>

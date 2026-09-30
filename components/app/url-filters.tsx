@@ -28,7 +28,7 @@ function FilterChip({
   const active = options.find((o) => o.value === value);
   return (
     <label
-      className={`relative shrink-0 flex items-center h-10 rounded-full pl-3.5 pr-9 text-[14px] font-semibold cursor-pointer ${
+      className={`relative shrink-0 flex items-center h-11 lg:h-10 rounded-full pl-3.5 pr-9 text-[14px] font-semibold cursor-pointer ${
         active
           ? "bg-filter-active text-background"
           : "bg-surface text-text shadow-[inset_0_0_0_1.5px_var(--color-ring)] hover:bg-surface-2"

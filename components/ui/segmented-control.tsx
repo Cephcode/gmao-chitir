@@ -28,7 +28,7 @@ export function SegmentedControl<T extends string>({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(opt.value)}
-            className={`inline-flex items-center gap-1.5 h-10 px-3.5 rounded-full text-[14px] font-semibold whitespace-nowrap cursor-pointer border-0 ${
+            className={`inline-flex items-center gap-1.5 h-11 lg:h-10 px-3.5 rounded-full text-[14px] font-semibold whitespace-nowrap cursor-pointer border-0 ${
               active
                 ? "bg-filter-active text-background"
                 : "bg-surface text-text shadow-[inset_0_0_0_1.5px_var(--color-ring)]"
