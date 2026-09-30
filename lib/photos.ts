@@ -53,6 +53,19 @@ const PATH_RE = new RegExp(`^(${UUID})/(${UUID})/${UUID}\\.jpg$`);
 
 // Chemin d'un fichier dans le bucket : {restaurant}/{intervention}/{uuid}.jpg
 // (même format que celui vérifié par les politiques Storage).
+// Identifiant aléatoire au format UUID v4. crypto.randomUUID() n'existe qu'en https (et sur
+// localhost) : sur un téléphone qui ouvre l'application par l'adresse du réseau local
+// (http://192.168…), il est absent et l'ajout de photo échouait. getRandomValues existe partout.
+export function randomId(): string {
+  const c = globalThis.crypto;
+  if (typeof c?.randomUUID === "function") return c.randomUUID();
+  const b = c.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40; // version 4
+  b[8] = (b[8] & 0x3f) | 0x80; // variante RFC 4122
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 export const photoPath = (restaurantId: string, interventionId: string, fileId: string) =>
   `${restaurantId}/${interventionId}/${fileId}.jpg`.toLowerCase();
 

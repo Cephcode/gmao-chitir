@@ -2,6 +2,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  randomId,
   PHOTOS_MAX_PAR_TYPE,
   counterLabel,
   failedPhotosMessage,
@@ -113,5 +114,19 @@ describe("messages d'échec d'envoi", () => {
     assert.equal(readFailedCount("abc"), 0);
     assert.equal(readFailedCount(["1"]), 0);
     assert.equal(readFailedCount(undefined), 0);
+  });
+});
+
+describe("randomId", () => {
+  test("UUID v4 valide, même sans crypto.randomUUID (site en http)", () => {
+    const original = globalThis.crypto.randomUUID;
+    Object.defineProperty(globalThis.crypto, "randomUUID", { value: undefined, configurable: true });
+    try {
+      const ids = new Set(Array.from({ length: 50 }, () => randomId()));
+      assert.equal(ids.size, 50);
+      for (const id of ids) assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    } finally {
+      Object.defineProperty(globalThis.crypto, "randomUUID", { value: original, configurable: true });
+    }
   });
 });

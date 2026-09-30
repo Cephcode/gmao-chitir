@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { Icon } from "@/components/icons";
 import { compressPhoto, PhotoError } from "@/lib/photos-browser";
-import { PHOTOS_MAX_PAR_TYPE, counterLabel, isImageType, limitMessage, takeWithinLimit } from "@/lib/photos";
+import { PHOTOS_MAX_PAR_TYPE, counterLabel, isImageType, limitMessage, randomId, takeWithinLimit } from "@/lib/photos";
 
 export type PendingPhoto = { id: string; blob: Blob; previewUrl: string };
 
@@ -24,7 +24,7 @@ export async function preparePhotos(files: File[], count: number, max = PHOTOS_M
   for (const file of accepted) {
     try {
       const blob = await compressPhoto(file);
-      ready.push({ id: crypto.randomUUID(), blob, previewUrl: URL.createObjectURL(blob) });
+      ready.push({ id: randomId(), blob, previewUrl: URL.createObjectURL(blob) });
     } catch (e) {
       errors.push(e instanceof PhotoError ? e.message : "Une photo n'a pas pu être préparée.");
     }

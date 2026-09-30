@@ -14,6 +14,7 @@ import {
   PHOTO_MAX_BYTES,
   isImageType,
   photoPath,
+  randomId,
   resizeDimensions,
   type PhotoKind,
 } from "@/lib/photos";
@@ -83,7 +84,7 @@ export async function sendPhotos(
   const storage = createClient().storage.from(PHOTO_BUCKET);
   const uploaded: string[] = [];
   for (const blob of blobs) {
-    const path = photoPath(restaurantId, interventionId, crypto.randomUUID());
+    const path = photoPath(restaurantId, interventionId, randomId());
     const { error } = await storage.upload(path, blob, { contentType: "image/jpeg", upsert: false });
     if (!error) uploaded.push(path);
   }
