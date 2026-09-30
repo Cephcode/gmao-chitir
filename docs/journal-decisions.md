@@ -108,3 +108,10 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Liens** : `APP_URL` = https://gmao-chitir.vercel.app.
 - **Vérifié** en local : trigger mis en file pg_net, RLS de `push_tokens`, fonction servie par le runtime Deno (réservation, non-répétition, id invalide refusé).
 - **Outils** : `supabase/functions` exclu du typage et du lint de Next (code Deno).
+- **Déploiement** (2026-09-30, après feu vert) : secrets `RESEND_API_KEY`, `RESEND_TEST_RECIPIENT`, `FIREBASE_SERVICE_ACCOUNT_KEY`, `APP_URL` enregistrés dans Supabase (valeurs jamais affichées), fonction déployée, migration poussée. Test de bout en bout sur la base hébergée : notification réservée par la fonction, second appel sans effet, id invalide refusé.
+
+## 2026-09-30 · Push dans le navigateur (étape 7c)
+- **Dépendance** : `firebase` 12.19.0 (validée par le développeur), seul le module messaging est chargé, à la demande (`lib/firebase-client.ts`).
+- **Service worker** : `/firebase-messaging-sw.js` généré par une route (configuration Firebase publique injectée, aucune clé secrète), scripts compat de même version depuis gstatic, exclu du proxy de session. En arrière-plan, le SDK affiche la notification et ouvre le lien au clic.
+- **Activation** : bouton « Notifications sur cet appareil » dans Mes alertes (ordinateur et mobile) : autorisation du navigateur, jeton FCM enregistré dans `push_tokens` (upsert ; un jeton déjà lié à un autre compte du même navigateur change de propriétaire), « Couper sur cet appareil » supprime le jeton. États gérés : non pris en charge (iPhone hors écran d'accueil), bloqué, activé, coupé.
+- **Limite connue** : application ouverte au premier plan, pas de bannière système (l'alerte reste visible dans la cloche).

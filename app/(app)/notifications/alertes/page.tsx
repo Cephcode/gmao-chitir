@@ -5,6 +5,7 @@ import { SETTINGS, getSettings } from "@/lib/notifications";
 import { Icon } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { AlertSettings } from "@/components/app/notifications/alert-settings";
+import { PushToggle } from "@/components/app/notifications/push-toggle";
 
 export default async function AlertesPage() {
   const settings = await getSettings();
@@ -15,6 +16,7 @@ export default async function AlertesPage() {
       </Link>
       <h1 className="font-display text-[22px] font-semibold m-0">Mes alertes</h1>
       <p className="m-0 text-text-muted text-[15px]">Choisissez ce qui vous est envoyé.</p>
+      <PushToggle />
       <Card className="py-2 px-5">
         <AlertSettings settings={SETTINGS} initial={settings} />
       </Card>

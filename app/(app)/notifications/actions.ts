@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SETTINGS, safeLink, type NotificationType } from "@/lib/notifications";
 
 // « Voir » : marque comme lue puis ouvre la page liée (lien interne seulement).
@@ -46,4 +47,31 @@ export async function reglerAlerte(type: NotificationType, enabled: boolean) {
     .upsert({ user_id: user.id, type, enabled }, { onConflict: "user_id,type" });
   revalidatePath("/notifications", "layout");
   return { ok: !error };
+}
+
+// Appareil qui reçoit les push : enregistré pour l'utilisateur connecté (RLS : ses propres
+// appareils). Un jeton déjà connu (autre compte sur le même navigateur) change de propriétaire.
+export async function enregistrerAppareil(token: string, userAgent: string) {
+  if (!token || token.length > 4096) return { ok: false as const };
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const };
+  // Le jeton peut appartenir à un autre compte (même navigateur) : on le retire d'abord.
+  // Un jeton FCM n'est connu que de l'appareil qui l'a obtenu.
+  await createAdminClient().from("push_tokens").delete().eq("token", token).neq("user_id", user.id);
+  const { error } = await supabase
+    .from("push_tokens")
+    .upsert(
+      { token, user_id: user.id, user_agent: userAgent.slice(0, 300), last_seen_at: new Date().toISOString() },
+      { onConflict: "token" },
+    );
+  return { ok: !error };
+}
+
+export async function oublierAppareil(token: string) {
+  const supabase = await createClient();
+  await supabase.from("push_tokens").delete().eq("token", token);
+  return { ok: true as const };
 }

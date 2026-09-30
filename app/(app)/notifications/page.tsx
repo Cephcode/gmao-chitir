@@ -18,6 +18,7 @@ import { Icon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertSettings } from "@/components/app/notifications/alert-settings";
+import { PushToggle } from "@/components/app/notifications/push-toggle";
 
 function Item({ n }: { n: NotificationRow }) {
   const style = TYPE_STYLE[n.type];
@@ -176,7 +177,8 @@ export default async function NotificationsPage(props: PageProps<"/notifications
         {/* Ordinateur : Mes alertes */}
         <Card className="hidden lg:flex flex-col gap-1 p-5">
           <h2 className="font-display text-[18px] font-semibold m-0">Mes alertes</h2>
-          <p className="m-0 text-text-muted text-[14px]">Choisissez ce qui vous est envoyé.</p>
+          <p className="m-0 text-text-muted text-[14px] mb-2">Choisissez ce qui vous est envoyé.</p>
+          <PushToggle />
           <AlertSettings settings={SETTINGS} initial={settings} />
         </Card>
       </div>
