@@ -5,7 +5,6 @@ import { getNavCounts, getProfile, ROLE_LABELS } from "@/lib/session";
 import { Sidebar, BottomNav, FabPanne } from "@/components/app/nav";
 import { canAccessAdmin } from "@/lib/admin";
 import { InstallBanner } from "@/components/app/install-banner";
-import { Analytics } from "@vercel/analytics/next"
 
 export default async function AppLayout({
   children,
