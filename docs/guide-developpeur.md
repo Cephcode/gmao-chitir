@@ -208,6 +208,7 @@ bash supabase/tests/run.sh 08_statuts   # un seul fichier
 | Symptôme | Où regarder |
 |---|---|
 | Erreur 500, page blanche en ligne | Vercel → Deployments → le déploiement → **Logs** |
+| Pages lentes | Région des fonctions dans le résumé du déploiement Vercel : doit être `dub1`, comme `vercel.json`, à côté de la base (Irlande) |
 | Erreur d'une fonction SQL ou d'un droit | Message affiché à l'écran, puis Supabase → Logs → Postgres |
 | Notification absente | Supabase → Edge Functions → `envoyer-notification` → **Logs** |
 | Mail absent | Resend → **Emails** (historique, statut de chaque envoi) |

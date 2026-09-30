@@ -138,6 +138,7 @@ Pour que ce soit le client qui reçoive ces mails (présentation, remise) : son 
 ## 8. Déploiement (Vercel)
 
 - Projet Vercel relié au dépôt Git. Adresse : celle de `APP_URL`.
+- **Région des fonctions : Dublin (`dub1`)**, fixée dans `vercel.json`, à côté de la base Supabase (Irlande, `eu-west-1`). Par défaut, Vercel utilise Washington (`iad1`) : chaque lecture de la base traversait alors l'Atlantique (environ 80 ms, plusieurs fois par page). Le plan gratuit permet une seule région. Si la base change de région, changer aussi celle-ci.
 - Variables : section 2, à saisir dans Vercel pour chaque environnement utile (Production, Preview). Le script `bash scripts/vercel-env.sh [production]` les copie depuis `.env.development.local` (après `vercel link`), puis **Redeploy**. Sans elles : erreur « 500 Middleware » dès l'accueil.
 - Prévisualisation : chaque branche poussée (ex. `staging`) a son adresse https `gmao-chitir-…-cephcodes-projects.vercel.app`. L'ajouter aux Redirect URLs de Supabase (Authentication → URL Configuration), par exemple `https://gmao-chitir-*-cephcodes-projects.vercel.app/**`.
 - Règle de travail : changement important commité sur `staging`, testé ensemble, puis fusion dans `main`.
