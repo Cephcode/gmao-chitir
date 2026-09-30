@@ -3,6 +3,8 @@
 Application de suivi des pannes, entretiens et pièces des restaurants Chitir Chicken.
 Next.js 16 (App Router) sur Vercel, Supabase (Postgres, Auth, Edge Function), Firebase (push), Resend (mails).
 Décisions et historique : `docs/journal-decisions.md`.
+**Pour modifier le projet** (carte des fichiers, recettes « je veux… », pièges connus) : `docs/guide-developpeur.md`.
+**Pour présenter l'application au client** : `docs/guide-presentation-client.md`.
 
 ## 1. Installation locale
 
@@ -17,14 +19,14 @@ npm run dev           # http://localhost:3000
 
 Autres scripts (`package.json`) : `npm run build`, `npm run start`, `npm run lint`.
 
-**Tester depuis un téléphone du réseau local** : Next bloque par défaut les ressources de dev demandées depuis une autre origine. Ajouter l'adresse du poste dans `next.config.ts` :
+**Tester depuis un téléphone du réseau local** : Next bloque par défaut les scripts de dev demandés depuis une autre origine (la page s'affiche mais reste inerte). `next.config.ts` autorise le réseau du poste avec un joker :
 
 ```ts
-const nextConfig: NextConfig = { allowedDevOrigins: ["<IP du poste sur le réseau>"] };
+allowedDevOrigins: ["192.168.11.*"],   // nom exact ou joker « * » ; la notation /24 n'est pas reconnue
 ```
 
-Puis ouvrir `http://<IP du poste>:3000` sur le téléphone. Ce réglage ne sert qu'en développement.
-Note : il n'est pas présent dans `next.config.ts` à ce jour.
+À adapter si le réseau change, puis ouvrir `http://<IP du poste>:3000` sur le téléphone. Ce réglage ne sert qu'en développement.
+⚠️ En `http`, le téléphone n'a ni push, ni installation, ni presse-papiers moderne. Pour tester ces fonctions, utiliser l'adresse https de prévisualisation Vercel (section 8).
 
 **Base visée en local** : l'application lit `NEXT_PUBLIC_SUPABASE_URL`. Selon le fichier `.env*` utilisé, elle pointe sur la base locale (Docker) ou sur la base hébergée. La base hébergée contient les vraies données : ne jamais y écrire de données de test.
 
@@ -88,9 +90,10 @@ bash supabase/tests/run.sh            # tout : scénarios SQL (pgTAP), concurren
 bash supabase/tests/run.sh 01_stock   # un seul scénario SQL
 ```
 
-- Résultat attendu à la fin de la recette : **471 réussis, 0 échoué**.
+- Résultat attendu au 2026-09-30 : **635 réussis, 0 échoué**.
+- Fichiers : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, `concurrence.sh`.
 - Scénarios SQL dans `supabase/tests/`, chacun en transaction annulée : aucune donnée ne reste, rien n'est envoyé. Le script vérifie à la fin qu'aucune donnée de test ne reste.
-- Règles pures (droits d'administration, entretien) : `tests/*.test.ts`, lancés par `node --test` depuis le script.
+- Règles pures (droits d'administration, entretien, catégories, photos) : `tests/*.test.ts`, lancés par `node --test` depuis le script.
 - Le script refuse de tourner si le conteneur Docker local est absent.
 
 ## 5. Tâche quotidienne (pg_cron)
@@ -102,7 +105,7 @@ bash supabase/tests/run.sh 01_stock   # un seul scénario SQL
 
 ## 6. Envoi des notifications
 
-1. Une ligne est ajoutée dans `notifications` (panne, clôture, stock, tâche du matin).
+1. Une ligne est ajoutée dans `notifications` (panne, clôture, stock, changement de statut, tâche du matin).
 2. Le trigger `trg_notifications_envoi` appelle l'Edge Function `envoyer-notification` via pg_net, après validation de la transaction.
 3. La fonction réserve la notification (`delivered_at`) : un seul envoi, un id inconnu ou déjà envoyé ne fait rien. C'est pourquoi elle tourne sans jeton (`verify_jwt = false` dans `supabase/config.toml`).
 4. Push Firebase vers tous les appareils du destinataire. Mail Resend pour les urgences et les pannes seulement.
@@ -111,6 +114,7 @@ Déployer la fonction : `supabase functions deploy envoyer-notification`.
 Journaux : console Supabase, Edge Functions, Logs (aucune donnée personnelle n'y est écrite).
 
 **Mode test Resend** : tant que le domaine n'est pas vérifié, Resend n'envoie qu'à l'adresse du compte. `RESEND_TEST_RECIPIENT` redirige tous les mails vers elle, avec le vrai destinataire écrit en tête du mail.
+Pour que ce soit le client qui reçoive ces mails (présentation, remise) : son propre compte Resend, sa clé dans `RESEND_API_KEY` et son e-mail dans `RESEND_TEST_RECIPIENT` (détail : `docs/guide-developpeur.md`, section 10).
 
 ### Passer Resend en envoi réel
 
@@ -125,13 +129,17 @@ Journaux : console Supabase, Edge Functions, Logs (aucune donnée personnelle n'
 - Service worker `/firebase-messaging-sw.js`, généré par une route Next (`app/firebase-messaging-sw.js/route.ts`) avec la configuration Firebase publique.
 - Activation **par appareil** : Notifications, Mes alertes, « Notifications sur cet appareil ». Le jeton est enregistré dans `push_tokens`. « Couper sur cet appareil » le supprime.
 - À la **déconnexion**, le navigateur retire son propre jeton : sur un appareil partagé, les alertes du compte précédent n'arrivent plus. Les autres appareils du compte ne changent pas.
-- iPhone : push seulement si l'application est ajoutée à l'écran d'accueil.
+- **https obligatoire** : sans https (par exemple `http://192.168…`), le navigateur désactive le service worker, donc aucun push, même application installée.
+- Application installable (`app/manifest.ts`) : bandeau « Installer l'application » (bouton sur Android, consigne Partager → Sur l'écran d'accueil sur iPhone).
+- iPhone : push seulement si l'application est ajoutée à l'écran d'accueil, puis ouverte depuis son icône.
+- **On n'est jamais prévenu de sa propre action** : pour tester, agir avec un compte et recevoir sur un autre.
 - Application ouverte au premier plan : pas de bannière système, l'alerte reste dans la cloche.
 
 ## 8. Déploiement (Vercel)
 
 - Projet Vercel relié au dépôt Git. Adresse : celle de `APP_URL`.
-- Variables : section 2, à saisir dans Vercel pour chaque environnement utile (Production, Preview).
+- Variables : section 2, à saisir dans Vercel pour chaque environnement utile (Production, Preview). Le script `bash scripts/vercel-env.sh [production]` les copie depuis `.env.development.local` (après `vercel link`), puis **Redeploy**. Sans elles : erreur « 500 Middleware » dès l'accueil.
+- Prévisualisation : chaque branche poussée (ex. `staging`) a son adresse https `gmao-chitir-…-cephcodes-projects.vercel.app`. L'ajouter aux Redirect URLs de Supabase (Authentication → URL Configuration), par exemple `https://gmao-chitir-*-cephcodes-projects.vercel.app/**`.
 - Règle de travail : changement important commité sur `staging`, testé ensemble, puis fusion dans `main`.
 - Ordre conseillé pour une livraison qui touche la base : migrations (`supabase db push`), puis Edge Function si modifiée, puis fusion dans `main`.
 
@@ -160,13 +168,26 @@ Le restaurant décide des données visibles, le rôle décide des actions. Contr
 | Consulter ses restaurants | oui (tous) | oui | oui | oui |
 | Déclarer une panne | oui | oui | oui | oui |
 | Créer, modifier équipement, pièce, catégorie, marque | oui | oui | non | non |
+| Choisir l'état de l'intervention à la déclaration | oui | oui | oui | non (« À planifier » imposé) |
+| Changer le statut d'une intervention (hors « Terminée ») | oui | oui | oui | non |
+| Photos « avant » (intervention ouverte) | oui | oui | oui | oui |
+| Photos « après » (intervention terminée, ou à la clôture) | oui | oui | oui | non |
+| Retirer une photo | oui | oui | la sienne | la sienne |
 | Mouvement de stock (livraison, correction) | oui | oui | non | non |
-| Modifier une intervention en cours, clôturer | oui | oui | oui | non |
+| Modifier une intervention ouverte (travail fait, technicien), clôturer | oui | oui | oui | non |
 | Noter un entretien comme fait | oui | oui | oui | non |
-| Supprimer (équipement, pièce, catégorie, marque, plan) | oui | non | non | non |
+| Supprimer (équipement, pièce, marque, plan) | oui | non | non | non |
+| Supprimer une catégorie (seulement si aucune machine) | oui | oui | non | non |
 | Administration, comptes | oui (tous) | oui : éditeurs, commentateurs, lecteurs de ses restaurants | non | non |
 | Administration, restaurants | oui | non | non | non |
+| Administration, catégories | oui | oui | non | non |
 | Rappels d'entretien (tâche du matin) | oui | oui | oui | non |
 
 Garde-fous des comptes : un propriétaire a toujours accès à tous les restaurants ; un éditeur ne crée jamais de propriétaire ni d'accès « tous les restaurants » ; personne ne change son propre rôle ni ne supprime son compte ; il reste toujours au moins un propriétaire.
 Un compte d'authentification sans profil dans `users` ne lit ni n'écrit rien.
+
+## 12. Interventions, photos, catégories
+
+- **Statuts** : À planifier, En cours, En attente de pièce, Terminée. « Terminée » ne s'obtient **que par la clôture** (bouton Clôturer), qui décompte le stock, met à jour la machine et la fiche de vie, et prévient le déclarant. Une intervention terminée ne se rouvre pas. Chaque changement de statut (`changer_statut_intervention`) prévient le déclarant (réglage « Suivi de mes pannes »). L'onglet « En cours » regroupe tout ce qui n'est pas terminé (libellé demandé par le client). Libellés : `lib/intervention-status.ts`.
+- **Photos** : 3 « avant » et 3 « après » par intervention, compressées dans le navigateur, bucket privé `photos` (section 3). Changer la limite : `lib/photos.ts` **et** `photos_max_par_type()` en SQL.
+- **Catégories** : Administration, puis Catégories (propriétaire et éditeur). Nom unique, code de 3 lettres (sert aux futurs codes machines, le changer ne renomme pas les machines existantes), icône au choix. Suppression refusée par la base si une machine l'utilise.

@@ -166,3 +166,8 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Champ** : `accept="image/*"` sans `capture`, pour que le téléphone propose appareil photo ou galerie.
 - **Fichiers orphelins** : Supabase interdit la suppression directe dans `storage.objects` en SQL. Si une intervention est supprimée (l'application ne le fait pas), ses fichiers restent dans le bucket et se retirent depuis la console.
 - **Migration** : `20260930230300_photos_interventions.sql`, locale, à pousser après accord.
+
+## 2026-09-30 · Documentation de reprise et guide de présentation
+- **Décision** : `docs/guide-developpeur.md` (carte du projet, cycle d'une modification, recettes « je veux… », règles de la base, pièges rencontrés, commandes) pour que le développeur puisse maintenir le projet seul ; `docs/guide-presentation-client.md` (déroulé de la démonstration, questions probables, limites à annoncer). README mis à jour (statuts, photos, catégories, https, Vercel Preview, droits).
+- **Mails pour la présentation** : sans domaine, Resend n'envoie qu'à l'adresse du compte Resend. Pour que le client reçoive les mails : son compte Resend, sa clé (`RESEND_API_KEY`) et son e-mail (`RESEND_TEST_RECIPIENT`).
+- **Bug relevé, non corrigé** : `users.created_by` n'a pas de règle `on delete` ; supprimer un compte qui a créé d'autres comptes échoue (violation de clé étrangère, reproduit en local). Correction proposée : `on delete set null` par une migration.
