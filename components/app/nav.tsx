@@ -55,7 +55,7 @@ export function Sidebar({
   const items: (NavItem & { badge?: number; badgeLabel?: string })[] = [
     ...MAIN_ITEMS.map((i) =>
       i.href === "/interventions"
-        ? { ...i, badge: urgences, badgeLabel: `${urgences} urgences en cours` }
+        ? { ...i, badge: urgences, badgeLabel: `${urgences} urgences ouvertes` }
         : i,
     ),
     { href: "/notifications", label: "Notifications", short: "Notifications", icon: "bell", badge: unread, badgeLabel: `${unread} non lues` },

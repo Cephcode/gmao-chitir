@@ -19,7 +19,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   lecteur: "Lecteur",
 };
 
-// Urgences en cours (restaurants accessibles, via RLS) et notifications non lues
+// Urgences ouvertes, tout statut sauf terminée (restaurants accessibles, via RLS) et notifications non lues
 // (les siennes, via RLS). Utilisés par le menu latéral et la cloche mobile.
 export const getNavCounts = cache(async () => {
   const supabase = await createClient();
@@ -27,7 +27,7 @@ export const getNavCounts = cache(async () => {
     supabase
       .from("interventions")
       .select("id", { count: "exact", head: true })
-      .eq("status", "en_cours")
+      .neq("status", "terminee")
       .eq("type", "urgence"),
     supabase
       .from("notifications")

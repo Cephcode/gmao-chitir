@@ -5,10 +5,14 @@
 //   propriétaire, éditeur, commentateur, sur leur restaurant, intervention encore ouverte).
 // - cloturerIntervention : fonction SQL cloturer_intervention, une seule transaction
 //   (clôture, pièces et stock, état de la machine, fiche de vie, notifications).
+// - changerStatutIntervention : fonction SQL changer_statut_intervention (statut ouvert
+//   seulement, fiche de vie, notification du déclarant). « Terminée » = clôture.
 // Le technicien choisi est revérifié ici : il doit avoir accès au restaurant.
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getIntervention, listTechnicians } from "@/lib/interventions";
+import { getProfile } from "@/lib/session";
+import { STATUS_LABELS, canSetStatus, isOpen, isOpenStatus, type OpenStatus } from "@/lib/intervention-status";
 import type { EquipmentState } from "@/lib/equipements";
 
 export type InterventionResult = { ok: true; message: string } | { ok: false; error: string } | null;
@@ -25,7 +29,7 @@ export async function enregistrerIntervention(input: {
   assignedTo: string | null;
 }): Promise<InterventionResult> {
   const intervention = await getIntervention(input.id);
-  if (!intervention || intervention.status !== "en_cours") {
+  if (!intervention || !isOpen(intervention.status)) {
     return { ok: false, error: "Intervention introuvable ou déjà clôturée." };
   }
   if (!(await checkAssignee(intervention.restaurant.id, input.assignedTo))) {
@@ -84,4 +88,34 @@ export async function cloturerIntervention(input: {
 
   revalidatePath("/", "layout");
   return { ok: true, message: "Intervention clôturée." };
+}
+
+export async function changerStatutIntervention(input: { id: string; statut: OpenStatus }): Promise<InterventionResult> {
+  if (!isOpenStatus(input.statut)) {
+    return { ok: false, error: "Choisissez À planifier, En cours ou En attente de pièce. Pour terminer, clôturez." };
+  }
+  // Vérifications côté serveur, en plus de la fonction SQL : rôle, puis intervention
+  // lue avec les droits de l'utilisateur (restaurant accessible), encore ouverte.
+  const profile = await getProfile();
+  if (!canSetStatus(profile?.role)) {
+    return { ok: false, error: "Votre rôle ne permet pas de changer le statut." };
+  }
+  const intervention = await getIntervention(input.id);
+  if (!intervention) return { ok: false, error: "Intervention introuvable." };
+  if (!isOpen(intervention.status)) return { ok: false, error: "Cette intervention est déjà clôturée." };
+  if (intervention.status === input.statut) return { ok: true, message: "Statut inchangé." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("changer_statut_intervention", {
+    p_intervention: input.id,
+    p_statut: input.statut,
+  });
+  if (error) {
+    // 42501 (droits), P0002 (introuvable), 22023 et 22004 (statut) : messages SQL en français.
+    const known = ["42501", "P0002", "22023", "22004"].includes(error.code ?? "");
+    return { ok: false, error: known ? error.message : "Le changement de statut a échoué. Réessayez." };
+  }
+
+  revalidatePath("/", "layout");
+  return { ok: true, message: `Statut : ${STATUS_LABELS[input.statut]}.` };
 }

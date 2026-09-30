@@ -129,7 +129,7 @@ export async function EquipmentSheet({
         "id, type, description, symptoms, reported_at, assignee:users!interventions_assigned_to_fkey(first_name)",
       )
       .eq("equipment_id", e.id)
-      .eq("status", "en_cours")
+      .neq("status", "terminee") // interventions ouvertes
       .order("reported_at", { ascending: false }),
     supabase
       .from("equipment_events")

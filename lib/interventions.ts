@@ -5,13 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import type { Role } from "@/lib/session";
 import type { StatusKey } from "@/components/ui/status-badge";
 import type { EquipmentState } from "@/lib/equipements";
+import { isOpen, isOpenStatus, type InterventionStatus, type OpenStatus } from "@/lib/intervention-status";
 
 export type InterventionType = "normal" | "urgence" | "alerte";
 
 export type InterventionRow = {
   id: string;
   type: InterventionType;
-  status: "en_cours" | "terminee";
+  status: InterventionStatus;
   symptoms: string[];
   description: string | null;
   reported_at: string;
@@ -33,7 +34,7 @@ export const TYPE_BADGE: Record<InterventionType, StatusKey> = {
   alerte: "alerte",
 };
 
-// Groupes de la liste « En cours », dans l'ordre d'affichage.
+// Groupes de la liste « Ouvertes », dans l'ordre d'affichage.
 export const TYPE_GROUPS: { type: InterventionType; label: string }[] = [
   { type: "urgence", label: "Urgences" },
   { type: "normal", label: "Normales" },
@@ -47,8 +48,11 @@ export const machineName = (i: InterventionRow) =>
 export const problem = (i: InterventionRow) =>
   i.description || i.symptoms.join(", ") || "Panne déclarée";
 
+// Onglet « statut » : ouvertes (tout sauf terminée, par défaut), terminées ou toutes.
+// Puce « etat » : un statut ouvert précis (À planifier, En cours, En attente de pièce).
 export type Filters = {
-  statut: "en_cours" | "terminee" | "toutes";
+  statut: "ouvertes" | "terminee" | "toutes";
+  etat: OpenStatus | "";
   type: string;
   restaurant: string; // short_code
   technicien: string; // id utilisateur ou « aucun »
@@ -59,7 +63,10 @@ export function readFilters(sp: Record<string, string | string[] | undefined>): 
   const get = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
   const statut = get("statut");
   return {
-    statut: statut === "terminee" || statut === "toutes" ? statut : "en_cours",
+    // Anciens liens ?statut=en_cours : onglet « Ouvertes ».
+    statut: statut === "terminee" || statut === "toutes" ? statut : "ouvertes",
+    // La puce « etat » ne concerne que les interventions ouvertes.
+    etat: statut !== "terminee" && isOpenStatus(get("etat")) ? (get("etat") as OpenStatus) : "",
     type: get("type"),
     restaurant: get("restaurant"),
     technicien: get("technicien"),
@@ -67,11 +74,11 @@ export function readFilters(sp: Record<string, string | string[] | undefined>): 
   };
 }
 
-// Requête des filtres, sans le statut par défaut (en_cours).
+// Requête des filtres, sans l'onglet par défaut (ouvertes).
 export function filtersQuery(f: Filters, override: Partial<Filters> = {}): string {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries({ ...f, ...override })) {
-    if (v && !(k === "statut" && v === "en_cours")) params.set(k, v);
+    if (v && !(k === "statut" && v === "ouvertes")) params.set(k, v);
   }
   const s = params.toString();
   return s ? `?${s}` : "";
@@ -80,10 +87,11 @@ export function filtersQuery(f: Filters, override: Partial<Filters> = {}): strin
 const normalize = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-// Filtres hors statut (le statut sert aux onglets, dont on affiche les compteurs).
+// Filtres hors onglet (l'onglet sert aux compteurs affichés) ; la puce « etat » en fait partie.
 export function applyFilters(rows: InterventionRow[], f: Filters): InterventionRow[] {
   const q = normalize(f.q);
   return rows.filter((i) => {
+    if (f.etat && i.status !== f.etat) return false;
     if (f.type && i.type !== f.type) return false;
     if (f.restaurant && i.restaurant.short_code !== f.restaurant) return false;
     if (f.technicien === "aucun" ? i.assignee : f.technicien && i.assignee?.id !== f.technicien)
@@ -104,13 +112,13 @@ const SELECT =
   "assignee:users!interventions_assigned_to_fkey(id, first_name), " +
   "closer:users!interventions_closed_by_fkey(first_name)";
 
-// En cours : urgences d'abord, puis plus récentes. Terminées : dernières clôturées d'abord.
+// Ouvertes : urgences d'abord, puis plus récentes. Terminées : dernières clôturées d'abord.
 export async function listInterventions(): Promise<InterventionRow[]> {
   const supabase = await createClient();
   const { data } = await supabase.from("interventions").select(SELECT);
   return ((data ?? []) as unknown as InterventionRow[]).sort((a, b) => {
-    if (a.status !== b.status) return a.status === "en_cours" ? -1 : 1;
-    if (a.status === "en_cours")
+    if (isOpen(a.status) !== isOpen(b.status)) return isOpen(a.status) ? -1 : 1;
+    if (isOpen(a.status))
       return TYPE_ORDER[a.type] - TYPE_ORDER[b.type] || b.reported_at.localeCompare(a.reported_at);
     return (b.closed_at ?? "").localeCompare(a.closed_at ?? "");
   });
@@ -194,10 +202,14 @@ export async function loadInterventionList(f: Filters) {
   ]);
   const filtered = applyFilters(all, f);
   return {
-    rows: f.statut === "toutes" ? filtered : filtered.filter((i) => i.status === f.statut),
+    rows:
+      f.statut === "toutes"
+        ? filtered
+        : filtered.filter((i) => (f.statut === "ouvertes" ? isOpen(i.status) : i.status === "terminee")),
     counts: {
-      en_cours: filtered.filter((i) => i.status === "en_cours").length,
-      terminee: filtered.filter((i) => i.status === "terminee").length,
+      ouvertes: filtered.filter((i) => isOpen(i.status)).length,
+      // Sans la puce « etat » (statut ouvert), qui ne concerne pas les terminées.
+      terminee: applyFilters(all, { ...f, etat: "" }).filter((i) => i.status === "terminee").length,
       toutes: filtered.length,
     },
     restaurants: (restaurantsRes.data ?? []) as { short_code: string }[],

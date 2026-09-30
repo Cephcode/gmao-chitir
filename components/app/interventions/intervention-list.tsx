@@ -1,6 +1,7 @@
 // Liste des interventions (M-06a / O-07) : cartes sur mobile, tableau sur ordinateur.
-// Onglets En cours / Terminées (/ Toutes sur ordinateur) avec compteurs ; en cours,
-// regroupement Urgences, Normales, Alertes. Chaque ligne ouvre l'intervention.
+// Onglets Ouvertes / Terminées (/ Toutes sur ordinateur) avec compteurs ; ouvertes,
+// regroupement Urgences, Normales, Alertes ; puce « Statut » pour un statut ouvert précis.
+// Chaque ligne ouvre l'intervention.
 import Link from "next/link";
 import { Suspense } from "react";
 import { dateCourte, depuis } from "@/lib/format";
@@ -18,12 +19,13 @@ import { Icon } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { UrlFilters } from "@/components/app/url-filters";
+import { OPEN_STATUSES, STATUS_BADGE, STATUS_LABELS, isOpen } from "@/lib/intervention-status";
 
-// « CTR1 · Salif · depuis 25 min » (en cours) ou « CTR1 · Salif · clôturée le 16 sept. ».
+// « CTR1 · Salif · depuis 25 min » (ouverte) ou « CTR1 · Salif · clôturée le 16 sept. ».
 function subline(i: InterventionRow) {
-  const who = i.assignee?.first_name ?? (i.status === "en_cours" ? "Pas encore attribuée" : null);
+  const who = i.assignee?.first_name ?? (isOpen(i.status) ? "Pas encore attribuée" : null);
   const when =
-    i.status === "en_cours"
+    isOpen(i.status)
       ? `depuis ${depuis(i.reported_at)}`
       : i.closed_at
         ? `clôturée le ${dateCourte(i.closed_at)}`
@@ -42,14 +44,14 @@ export function InterventionList({
 }: {
   rows: InterventionRow[]; // déjà filtrées, statut compris
   filters: Filters;
-  counts: { en_cours: number; terminee: number; toutes: number };
+  counts: { ouvertes: number; terminee: number; toutes: number };
   restaurants: { short_code: string }[];
   technicians: Technician[];
   selectedId?: string;
   unread: number;
 }) {
   const query = filtersQuery(filters);
-  const grouped = filters.statut === "en_cours";
+  const grouped = filters.statut === "ouvertes";
   const groups = grouped
     ? TYPE_GROUPS.map((g) => ({ ...g, rows: rows.filter((r) => r.type === g.type) })).filter(
         (g) => g.rows.length > 0,
@@ -57,7 +59,7 @@ export function InterventionList({
     : [{ type: null, label: "", rows }];
 
   const tabs = [
-    { statut: "en_cours" as const, label: `En cours (${counts.en_cours})`, desktopOnly: false },
+    { statut: "ouvertes" as const, label: `Ouvertes (${counts.ouvertes})`, desktopOnly: false },
     { statut: "terminee" as const, label: `Terminées (${counts.terminee})`, desktopOnly: false },
     { statut: "toutes" as const, label: "Toutes", desktopOnly: true },
   ];
@@ -92,7 +94,7 @@ export function InterventionList({
           return (
             <Link
               key={t.statut}
-              href={`/interventions${filtersQuery(filters, { statut: t.statut })}`}
+              href={`/interventions${filtersQuery(filters, { statut: t.statut, ...(t.statut === "terminee" ? { etat: "" as const } : {}) })}`}
               aria-current={active ? "page" : undefined}
               className={`${t.desktopOnly ? "hidden lg:block" : ""} text-center py-2.5 rounded-sm text-[15px] font-semibold lg:rounded-none lg:px-1 lg:-mb-px lg:border-b-2 ${
                 active
@@ -118,6 +120,15 @@ export function InterventionList({
                     name: "restaurant",
                     label: "Restaurant",
                     options: restaurants.map((r) => ({ value: r.short_code, label: r.short_code })),
+                  },
+                ]
+              : []),
+            ...(filters.statut !== "terminee"
+              ? [
+                  {
+                    name: "etat",
+                    label: "Statut",
+                    options: OPEN_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] })),
                   },
                 ]
               : []),
@@ -149,10 +160,10 @@ export function InterventionList({
           </span>
           <div>
             <div className="font-semibold">
-              {filters.statut === "en_cours" ? "Aucune intervention en cours" : "Aucune intervention"}
+              {filters.statut === "ouvertes" && !filters.etat ? "Aucune intervention ouverte" : "Aucune intervention"}
             </div>
             <div className="text-text-muted text-[14px]">
-              {filters.statut === "en_cours"
+              {filters.statut === "ouvertes" && !filters.etat
                 ? "Si une machine tombe en panne, appuyez sur « Déclarer une panne »."
                 : "Changez la recherche ou retirez un filtre."}
             </div>
@@ -179,14 +190,14 @@ export function InterventionList({
                     key={i.id}
                     href={`/interventions/${i.id}${query}`}
                     className={`flex flex-col gap-2 p-4 rounded-lg bg-surface text-text ${
-                      i.type === "urgence" && i.status === "en_cours"
+                      i.type === "urgence" && isOpen(i.status)
                         ? "shadow-[0_0_0_1.5px_#F4B8B0]"
                         : "shadow-[0_0_0_1px_var(--color-border)]"
                     }`}
                   >
                     <div className="flex flex-wrap gap-1.5">
                       <StatusBadge status={TYPE_BADGE[i.type]} />
-                      <StatusBadge status={i.status === "en_cours" ? "enCours" : "termine"} />
+                      <StatusBadge status={STATUS_BADGE[i.status]} />
                     </div>
                     <div className="font-display font-semibold text-[17px]">{machineName(i)}</div>
                     <div className="text-text-muted text-[13px]">{subline(i)}</div>
@@ -246,14 +257,14 @@ export function InterventionList({
                           {i.assignee?.first_name ?? <span className="text-text-muted">À attribuer</span>}
                         </td>
                         <td className="px-4 py-2.5">
-                          {i.status === "en_cours"
+                          {isOpen(i.status)
                             ? depuis(i.reported_at)
                             : i.closed_at
                               ? dateCourte(i.closed_at)
                               : "—"}
                         </td>
                         <td className="px-4 py-2.5">
-                          <StatusBadge status={i.status === "en_cours" ? "enCours" : "termine"} />
+                          <StatusBadge status={STATUS_BADGE[i.status]} />
                         </td>
                       </tr>
                     );

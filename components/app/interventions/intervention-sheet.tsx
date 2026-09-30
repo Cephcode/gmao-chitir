@@ -1,5 +1,5 @@
 // Fiche d'une intervention (M-06b / panneau O-07).
-// Ouverte : résumé de la panne puis formulaire de clôture (sauf lecteur).
+// Ouverte : résumé de la panne, statut puis formulaire de clôture (sauf lecteur).
 // Terminée : ce qui a été fait, pièces utilisées, état après, qui a clôturé.
 import Link from "next/link";
 import type { Role } from "@/lib/session";
@@ -20,6 +20,8 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ClosingForm } from "@/components/app/interventions/closing-form";
 import { SheetTitle } from "@/components/app/sheet-title";
+import { StatusSelector } from "@/components/app/interventions/status-selector";
+import { STATUS_BADGE, canSetStatus, isOpen } from "@/lib/intervention-status";
 
 const TZ = "Africa/Ouagadougou";
 
@@ -40,8 +42,8 @@ export async function InterventionSheet({
   role: Role;
   closeHref: string;
 }) {
-  const open = i.status === "en_cours";
-  const canAct = open && role !== "lecteur";
+  const open = isOpen(i.status);
+  const canAct = open && canSetStatus(role);
   const [technicians, parts, usedParts] = await Promise.all([
     canAct ? listTechnicians(i.restaurant.id) : Promise.resolve([]),
     canAct ? listPartsFor(i.equipment_id) : Promise.resolve([]),
@@ -78,7 +80,7 @@ export async function InterventionSheet({
       <Card className="flex flex-col gap-3 p-5 lg:p-0 lg:shadow-none">
         <div className="flex flex-wrap gap-1.5">
           <StatusBadge status={TYPE_BADGE[i.type]} />
-          <StatusBadge status={open ? "enCours" : "termine"} />
+          <StatusBadge status={STATUS_BADGE[i.status]} />
         </div>
         <SheetTitle>
           {i.equipment ? (
@@ -109,6 +111,8 @@ export async function InterventionSheet({
           Vous êtes en lecture seule : la clôture est faite par le technicien ou un éditeur.
         </Alert>
       )}
+
+      {canAct && i.status !== "terminee" && <StatusSelector key={i.id} interventionId={i.id} status={i.status} />}
 
       {canAct && (
         <div className="lg:border-t lg:border-border lg:pt-5">

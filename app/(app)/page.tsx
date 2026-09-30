@@ -12,6 +12,7 @@ import { canAccessAdmin } from "@/lib/admin";
 import { Icon, type IconName } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusKey } from "@/components/ui/status-badge";
+import { STATUS_LABELS, type OpenStatus } from "@/lib/intervention-status";
 import { KpiCard } from "@/components/app/kpi-card";
 import { ListRow } from "@/components/app/list-row";
 import { RestaurantSelect } from "@/components/app/restaurant-select";
@@ -25,6 +26,7 @@ type Equipment = {
 type OpenIntervention = {
   id: string;
   type: "normal" | "urgence" | "alerte";
+  status: OpenStatus;
   description: string | null;
   symptoms: string[];
   reported_at: string;
@@ -70,9 +72,9 @@ export default async function TableauDeBord(props: PageProps<"/">) {
     supabase
       .from("interventions")
       .select(
-        "id, type, description, symptoms, reported_at, restaurant_id, equipment_free_text, equipments(name, categories(code))",
+        "id, type, status, description, symptoms, reported_at, restaurant_id, equipment_free_text, equipments(name, categories(code))",
       )
-      .eq("status", "en_cours")
+      .neq("status", "terminee") // ouvertes : à planifier, en cours, en attente de pièce
       .order("reported_at", { ascending: true }),
     supabase
       .from("maintenance_plans")
@@ -115,6 +117,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
     name: i.equipments?.name ?? i.equipment_free_text ?? "Machine non identifiée",
     sub: [
       codeOf.get(i.restaurant_id),
+      STATUS_LABELS[i.status],
       i.description || i.symptoms.join(", ") || "Panne déclarée",
       depuis(i.reported_at),
     ]
@@ -199,8 +202,8 @@ export default async function TableauDeBord(props: PageProps<"/">) {
       {/* Indicateurs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          href={`/interventions?statut=en_cours&type=urgence${filterQuery}`}
-          label="Urgences en cours"
+          href={`/interventions?type=urgence${filterQuery}`}
+          label="Urgences ouvertes"
           value={urgences.length}
           icon="bolt"
           tone="danger"
