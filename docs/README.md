@@ -158,6 +158,7 @@ Pour que ce soit le client qui reçoive ces mails (présentation, remise) : son 
 ## 10. Comptes et connexion
 
 - Connexion par e-mail et mot de passe uniquement.
+- **Pas de « mot de passe oublié » en libre-service** (retiré le 2026-09-30) : la personne demande au propriétaire ou à son éditeur, qui génère un nouveau mot de passe temporaire dans Administration, fiche du compte.
 - **Inscription libre désactivée** (`enable_signup = false` dans `supabase/config.toml`, et désactivée dans la console pour l'hébergé). Les comptes sont créés dans Administration, avec un mot de passe temporaire affiché une seule fois, à changer à la première connexion.
 
 ## 11. Rôles et droits

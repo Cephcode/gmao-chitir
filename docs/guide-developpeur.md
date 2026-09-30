@@ -54,7 +54,7 @@ trigger trg_notifications_envoi → pg_net → Edge Function envoyer-notificatio
 | `app/(app)/**/actions.ts` | Actions serveur : tout ce qui **écrit** (enregistrer, clôturer, créer un compte…) |
 | `app/(app)/page.tsx` | Le tableau de bord |
 | `app/(app)/error.tsx`, `loading.tsx` | Écrans d'erreur et de chargement |
-| `app/connexion/`, `changer-mot-de-passe/`, `mot-de-passe-oublie/` | Pages accessibles sans session |
+| `app/connexion/`, `changer-mot-de-passe/` | Connexion, et changement obligatoire du mot de passe temporaire. Pas de « mot de passe oublié » en libre-service : un nouveau mot de passe temporaire se génère dans Administration |
 | `app/layout.tsx` | Page racine : polices, titre, métadonnées iPhone, viewport |
 | `app/manifest.ts`, `app/apple-icon.png`, `public/icons/` | Application installable : nom et icônes |
 | `app/firebase-messaging-sw.js/route.ts` | Service worker des push (généré avec la configuration Firebase) |

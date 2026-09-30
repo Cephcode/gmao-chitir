@@ -97,8 +97,8 @@ Ordre des corrections : critique, haute, bloquant d'interface, puis le reste val
 - [ ] **Authentication** :
   - inscription libre désactivée (fait) ;
   - mot de passe de 8 caractères minimum ;
-  - Site URL et Redirect URLs réglées sur l'adresse de production ;
-  - modèles d'e-mail (mot de passe oublié) en français.
+  - Site URL et Redirect URLs réglées sur l'adresse de production.
+  - (Pas de modèle « mot de passe oublié » à traduire : fonction retirée, décision du 2026-09-30.)
 - [ ] **Tâche pg_cron** `taches_quotidiennes` active (`select * from cron.job`).
 - [ ] **Edge Function** `envoyer-notification` : bien déployée, et secret `APP_URL` = adresse de production.
 

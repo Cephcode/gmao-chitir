@@ -4,7 +4,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Routes accessibles sans être connecté.
-const PUBLIC_PATHS = ["/connexion", "/mot-de-passe-oublie"];
+// Pas de « mot de passe oublié » en libre-service : le propriétaire (ou l'éditeur) génère un
+// nouveau mot de passe temporaire depuis Administration.
+const PUBLIC_PATHS = ["/connexion"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

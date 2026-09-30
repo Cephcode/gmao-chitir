@@ -176,3 +176,6 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 ## 2026-09-30 · Région Vercel à Dublin, animations abandonnées
 - **Décision** : fonctions Vercel à Dublin (`dub1`, `vercel.json`) au lieu de Washington (`iad1`, défaut), à côté de la base Supabase (`eu-west-1`). Chaque page fait 4 à 5 lectures successives de la base : environ 300 à 400 ms gagnées par navigation. Possible sur le plan gratuit (une seule région).
 - **Écarté** : animations GSAP (choix du développeur). Reporté : un seul contrôle d'authentification par page (`getClaims` dans `getProfile`), Speed Insights.
+
+## 2026-09-30 · « Mot de passe oublié » retiré
+- **Décision** : lien et page `/mot-de-passe-oublie` retirés (la page n'était qu'un message d'attente). Un mot de passe perdu se règle par le propriétaire ou l'éditeur : nouveau mot de passe temporaire dans Administration, fiche du compte. Rien à traduire dans les modèles d'e-mail Supabase.

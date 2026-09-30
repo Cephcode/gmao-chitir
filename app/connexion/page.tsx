@@ -75,13 +75,6 @@ export default function ConnexionPage() {
             <Button type="submit" disabled={pending} className="w-full">
               {pending ? "Connexion…" : "Se connecter"}
             </Button>
-
-            <a
-              href="/mot-de-passe-oublie"
-              className="self-center text-text-muted font-semibold text-sm py-2"
-            >
-              Mot de passe oublié ?
-            </a>
           </form>
         </div>
       </div>
