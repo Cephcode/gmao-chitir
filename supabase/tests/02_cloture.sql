@@ -168,9 +168,13 @@ select is(tests.essai('com1', $$ with t as (update interventions set equipment_i
           where description = 'assignation' returning 1) select count(*) from t $$), 'refusé',
           'commentateur R1 : rattacher son intervention à une machine de R2 refusé');
 -- Conséquence si le rattachement passe : la clôture modifie la machine de R2.
+-- Le refus (42501) est attendu : on l'absorbe pour que la suite du fichier continue.
 select tests.se_connecter('com1');
-update interventions set equipment_id = tests.id('E2') where description = 'assignation';
-select cloturer_intervention((select id from interventions where description = 'assignation'), 'x', 'hors_service');
+do $$ begin
+  update interventions set equipment_id = tests.id('E2') where description = 'assignation';
+  perform cloturer_intervention((select id from interventions where description = 'assignation'), 'x', 'hors_service');
+exception when insufficient_privilege then null;
+end $$;
 select tests.se_deconnecter();
 select is((select state::text from equipments where id = tests.id('E2')), 'en_panne',
           'machine de R2 non modifiable par un commentateur de R1 (via rattachement puis clôture)');
