@@ -71,10 +71,24 @@ On suit les phases dans l'ordre. Chaque correction fait l'objet d'un commit sur 
 - **Constat** : un propriétaire ou un éditeur peut déjà créer une catégorie, mais seulement dans le formulaire d'un équipement : on tape un nom inconnu dans « Catégorie », puis on choisit « Ajouter « … » comme catégorie ». Ce n'était peut-être pas visible sur mobile à cause du blocage des scripts (phase 0).
 - **Si besoin** : un onglet « Catégories » dans Administration (liste, renommer, code de 3 lettres, supprimer si aucune machine), réservé au propriétaire et à l'éditeur. Effort faible à moyen.
 
-## Questions à trancher avant les phases 3 à 5
+## Décisions du développeur (2026-09-30)
 
-1. **Statuts** : une panne déclarée part-elle en « À planifier » même si c'est une urgence ?
-2. **Statuts** : qui peut changer le statut ? Je propose propriétaire, éditeur et technicien. Le déclarant est-il prévenu à chaque changement ?
-3. **Nouvelle intervention** : faut-il maintenant permettre de créer une intervention sans panne (entretien, travaux) depuis l'écran Interventions, en « À planifier » ?
-4. **Photos** : une ou plusieurs par intervention ? Photo « après » à la clôture ? Dans le périmètre actuel, ou facturé à part ?
-5. **Catégories** : l'ajout dans le formulaire équipement suffit-il, ou faut-il un écran dans Administration ?
+- **Phase 0 et phase 1** : faites. Doubles boutons `d7e9256`, bouton Copier `5a33272`, clavier et application installable `e963734`, débordement de l'accueil `963be7e`.
+  - Mail d'urgence reçu malgré le réglage : ce n'est pas un bug. Resend est en mode test, donc tous les mails partent vers l'adresse du compte Resend.
+  - Push indisponible sur Android : le site est ouvert en http sur le réseau local, et il faut du https.
+- **Statuts (phase 3)** :
+  - L'enum devient `a_planifier`, `en_cours`, `en_attente_piece`, `terminee`.
+  - À la déclaration d'une panne, le choix de l'état est **obligatoire**, parmi tous les états sauf « Terminée ». Seuls le propriétaire, l'éditeur et le technicien (commentateur) choisissent. Un lecteur peut déclarer sans choisir l'état : sa panne part en « À planifier » (choix par défaut, à confirmer).
+  - Propriétaire, éditeur et technicien changent le statut dans la fiche.
+  - « Terminée » ne s'obtient que par la clôture.
+  - Le **déclarant est prévenu à chaque changement** (notification, et push selon ses réglages).
+  - Inclus dans le périmètre, **pas de facturation à part**.
+  - « Nouvelle intervention » (sans panne) : reste reportée.
+- **Photos (phase 4)** :
+  - Jusqu'à **3 photos « avant »** (déclaration ou fiche) et **3 photos « après »** (clôture).
+  - Compressées dans le navigateur avant l'envoi vers Supabase Storage.
+  - Les limites sont réglables à un seul endroit, pour en permettre plus si le client passe au plan payant.
+  - Inclus dans le périmètre, pas de facturation à part.
+- **Catégories (phase 5)** : un écran « Catégories » dans Administration (ajouter, renommer, code de 3 lettres, supprimer si aucune machine), pour le propriétaire et l'éditeur. Il comprend aussi le choix de l'icône de la catégorie.
+
+Ordre de réalisation : phase 3, puis 5, puis 4. Chaque phase se fait en local, avec des tests, et ses migrations sont poussées après accord.
