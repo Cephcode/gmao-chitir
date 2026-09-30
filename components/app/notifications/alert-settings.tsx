@@ -48,13 +48,20 @@ export function AlertSettings({
               aria-checked={on}
               aria-labelledby={`alert-${s.type}`}
               onClick={() => toggle(s.type)}
-              className={`relative w-[52px] h-8 rounded-full border-0 cursor-pointer transition-colors shrink-0 ${
-                on ? "bg-filter-active" : "bg-border"
-              }`}
+              // Zone cliquable de 44 px de haut ; la piste visible garde 52 x 32 px.
+              className="flex items-center justify-center min-h-11 min-w-11 p-0 bg-transparent border-0 cursor-pointer shrink-0"
             >
               <span
-                className={`absolute top-1 size-6 rounded-full bg-surface shadow transition-all ${on ? "left-[24px]" : "left-1"}`}
-              />
+                aria-hidden="true"
+                // Éteint : liseré brun-gris (3,9:1 sur blanc) pour que l'interrupteur se voie.
+                className={`relative block w-[52px] h-8 rounded-full transition-colors ${
+                  on ? "bg-filter-active" : "bg-border shadow-[inset_0_0_0_1.5px_var(--color-border-strong)]"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 size-6 rounded-full bg-surface shadow transition-all ${on ? "left-[24px]" : "left-1"}`}
+                />
+              </span>
             </button>
           </div>
         );
