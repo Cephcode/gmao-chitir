@@ -138,6 +138,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigation principale"
+      data-hide-on-keyboard
       className="lg:hidden fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-border grid grid-cols-4 px-2 pt-2 pb-[max(14px,env(safe-area-inset-bottom))]"
     >
       {MAIN_ITEMS.map((item) => {
@@ -173,6 +174,7 @@ export function FabPanne() {
   return (
     <Link
       href="/panne"
+      data-hide-on-keyboard
       className={`${buttonClass({ size: "cta" })} lg:hidden fixed right-4 bottom-[96px] z-30`}
     >
       <Icon name="alert" />

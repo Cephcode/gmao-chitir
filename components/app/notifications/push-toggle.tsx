@@ -32,6 +32,20 @@ function explain(err: unknown): string {
   return detail ? `${hint} Détail : ${detail}` : hint;
 }
 
+// Pourquoi le push n'est pas disponible : site hors https (ex. http://192.168… en
+// développement : le navigateur coupe les service workers), iPhone hors écran d'accueil,
+// ou navigateur sans push.
+function unsupportedReason(): string {
+  if (typeof window === "undefined") return "";
+  if (!window.isSecureContext) {
+    return "Pas disponibles : le site doit être ouvert par son adresse sécurisée (https), pas par l'adresse du réseau local.";
+  }
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    return "Sur iPhone, ajoutez d'abord l'application à l'écran d'accueil (Partager, « Sur l'écran d'accueil »), puis ouvrez-la depuis son icône.";
+  }
+  return "Pas disponibles sur ce navigateur. Essayez Google Chrome.";
+}
+
 export function PushToggle() {
   const [state, setState] = useState<State>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +99,7 @@ export function PushToggle() {
             {state === "denied" &&
               "Bloquées par le navigateur : autorisez les notifications pour ce site dans ses réglages."}
             {state === "unsupported" &&
-              "Pas disponibles sur ce navigateur. Sur iPhone, ajoutez d'abord l'application à l'écran d'accueil."}
+              unsupportedReason()}
           </div>
         </div>
       </div>

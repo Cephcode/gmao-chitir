@@ -9,8 +9,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Ignore les fichiers statiques, images et assets pour ne pas bloquer leur chargement,
-  // et le service worker des push (doit rester accessible même session expirée).
+  // et le service worker des push et le manifeste (lus par le navigateur même sans session).
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|firebase-messaging-sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|firebase-messaging-sw\\.js|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

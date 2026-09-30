@@ -89,3 +89,11 @@ body {
 @media (min-width: 64rem) {
   html { overscroll-behavior-y: none; }
 }
+
+/* Mobile : pendant la saisie (clavier ouvert), la barre du bas et le bouton flottant
+   se cachent. Sinon ils recouvrent le champ et la page défile au-delà de la barre. */
+@media (max-width: 63.99rem) {
+  body:has(:is(input:not([type="checkbox"], [type="radio"]), textarea, select):focus) [data-hide-on-keyboard] {
+    display: none;
+  }
+}
