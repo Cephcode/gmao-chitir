@@ -80,3 +80,9 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Quantités** : ne bougent que par `mouvement_stock` (livraison, correction ±1 avec les boutons − / +) ou par la clôture d'intervention. Une nouvelle pièce est créée à 0 puis son stock initial entre comme une livraison, pour que la quantité reste la somme des mouvements (deux appels : si le second échoue, message demandant de saisir une livraison).
 - **Va avec / utilisée sur** : « va avec » = machines prévues, saisies dans le formulaire (`part_compatibilities`, limité aux machines des restaurants de l'utilisateur) ; « utilisée sur » = déduit des pièces des interventions, avec les quantités. Affichés séparément.
 - **Suppression** : propriétaire seulement ; refusée si la pièce a servi dans une intervention (historique conservé).
+
+## 2026-09-30 · Notifications (étape 5)
+- **Décision** : `/notifications` (groupées par jour ; catégories Urgences, Pannes, Entretiens, Stock, Réparations sur ordinateur ; onglets Toutes / Non lues sur mobile ; « Tout marquer comme lu ») et « Mes alertes » (colonne de droite sur ordinateur, `/notifications/alertes` sur mobile). Aucune migration, RLS : chacun ne lit et ne règle que les siennes.
+- **Voir** : action serveur qui marque comme lue puis redirige vers le lien, seulement s'il est interne (`safeLink`, pas de redirection vers un autre site).
+- **Mes alertes** : un interrupteur par type (activé par défaut, ligne `notification_settings` créée au premier changement). « Commentaires » retiré (hors périmètre). Les entretiens à prévoir / en retard seront produits par la tâche quotidienne (étape 7).
+- **À proposer** : titres plus parlants (« Urgence : Grande friteuse 2 portes, CTR1 » au lieu de « Urgence déclarée »), ce qui demande de modifier les fonctions SQL.
