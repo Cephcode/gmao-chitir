@@ -32,7 +32,7 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 ## 2026-09-29 · Connexion et session (étape 2a/2b)
 - **Décision** : `@supabase/ssr` avec 3 clients (`lib/supabase/client.ts` navigateur, `server.ts` serveur, `admin.ts` service role serveur seulement). Session gérée par cookies via `proxy.ts` (le middleware renommé en Next 16, runtime Node). Connexion en une étape (e-mail ou téléphone + mot de passe), changement de mot de passe obligatoire à la première connexion (`app/changer-mot-de-passe`), garde de session dans le layout `app/(app)`.
 - **Correctif** : `NEXT_PUBLIC_SUPABASE_URL` dans `.env.development.local` contenait `/rest/v1/` en trop, ce qui cassait toutes les requêtes. Corrigé en URL de base `https://jmxeewnhthhlutqgeixj.supabase.co`.
-- **Premier compte** : propriétaire Sylvester NANA (sylvesternana@gmail.com) créé via service role, `all_restaurants=true`, `must_change_password=true` (changera son mot de passe à la première connexion).
+- **Premier compte** : propriétaire Sylvester NANA créé via service role, `all_restaurants=true`, `must_change_password=true` (changera son mot de passe à la première connexion).
 - **Vérifié** : connexion API (email+mdp) OK, RLS → propriétaire voit 49 équipements et 2 restaurants ; `next build` OK ; proxy redirige `/` vers `/connexion` si non connecté.
 - **À faire déploiement** : renseigner les variables `NEXT_PUBLIC_SUPABASE_*` et `SUPABASE_SECRET_KEY` dans l'hébergeur (le build de prod ne lit pas `.env.development.local`).
 
