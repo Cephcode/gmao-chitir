@@ -68,9 +68,9 @@ Appliqué sur la base **locale** uniquement, une migration et un commit.
 - **Rapport 3, autres détails** : points non traités ci-dessus (dont D5, couleurs en dur hors tokens et `#D6CBBB` au lieu de `var(--color-ring)`).
 - **« Rester connecté »** sur la page de connexion.
 
-## Migrations à pousser sur la base hébergée après accord
+## Migrations poussées sur la base hébergée
 
-Non poussées. `supabase db push` à lancer par le développeur, dans l'ordre :
+Poussées le 2026-09-30 par le développeur (`supabase db push`), local et hébergé alignés (`supabase migration list`) :
 `20260930200000`, `20260930200100`, `20260930200200`, `20260930200300`, `20260930210000`, `20260930210100`, `20260930210200`, `20260930210300`, `20260930220000`.
 
-Avant `20260930210100`, vérifier en lecture seule sur l'hébergé que `select count(*) from users where role = 'proprietaire' and not all_restaurants;` renvoie 0 (sinon la contrainte échoue sans rien modifier).
+Vérifié avant la poussée, en lecture seule sur l'hébergé : `select count(*) from users where role = 'proprietaire' and not all_restaurants;` a renvoyé 0.

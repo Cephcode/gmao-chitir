@@ -71,6 +71,10 @@ export async function enregistrerAppareil(token: string, userAgent: string) {
   return { ok: !error };
 }
 
+// Retire ce jeton des appareils du compte connecté (« Couper » et déconnexion, recette S-B3).
+// Client de l'utilisateur, pas le client admin : la RLS (push_tokens_delete) limite la
+// suppression à ses propres jetons, un jeton d'un autre compte n'est pas touché.
+// Toujours ok : la déconnexion ne doit pas être bloquée par un échec ici.
 export async function oublierAppareil(token: string) {
   const supabase = await createClient();
   await supabase.from("push_tokens").delete().eq("token", token);
