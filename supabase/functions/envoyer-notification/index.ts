@@ -7,7 +7,11 @@
 // 3. Mail Resend pour les urgences et les pannes. Mode test tant que le domaine n'est pas
 //    vérifié : si RESEND_TEST_RECIPIENT est défini, tous les mails partent vers cette adresse,
 //    avec le vrai destinataire indiqué dans le mail.
-// Secrets (supabase secrets set) : RESEND_API_KEY, RESEND_TEST_RECIPIENT, RESEND_FROM (facultatif),
+// Expéditeur : RESEND_FROM_PRODUCTION (domaine du client) s'il est défini, sinon
+// RESEND_FROM_PRESENTATION (domaine du développeur, version de présentation), sinon
+// l'adresse de test de Resend. À la remise au client, il suffit de définir RESEND_FROM_PRODUCTION.
+// Secrets (supabase secrets set) : RESEND_API_KEY, RESEND_TEST_RECIPIENT (facultatif),
+// RESEND_FROM_PRESENTATION, RESEND_FROM_PRODUCTION (facultatifs),
 // FIREBASE_SERVICE_ACCOUNT_KEY (JSON du compte de service), APP_URL.
 // Aucune donnée personnelle n'est écrite dans les journaux.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -134,6 +138,14 @@ async function envoyerPush(n: Notification, url: string): Promise<string> {
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
+// Adresse d'expédition : production (client) > présentation (développeur) > test Resend.
+// Une valeur vide compte comme absente, pour pouvoir « vider » un secret sans le supprimer.
+function expediteur(): string {
+  const production = Deno.env.get("RESEND_FROM_PRODUCTION")?.trim();
+  const presentation = Deno.env.get("RESEND_FROM_PRESENTATION")?.trim();
+  return production || presentation || "GMAO Chitir <onboarding@resend.dev>";
+}
+
 async function envoyerMail(n: Notification, url: string): Promise<string> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) return "mail non configuré";
@@ -157,7 +169,7 @@ async function envoyerMail(n: Notification, url: string): Promise<string> {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: Deno.env.get("RESEND_FROM") ?? "GMAO Chitir <onboarding@resend.dev>",
+      from: expediteur(),
       to: [testRecipient || email],
       subject: n.title,
       html,

@@ -103,7 +103,7 @@ Ordre des corrections : critique, haute, bloquant d'interface, puis le reste val
 - [ ] **Edge Function** `envoyer-notification` : bien déployée, et secret `APP_URL` = adresse de production.
 
 **Resend**
-- [ ] Domaine d'envoi vérifié, `RESEND_FROM` réglé, `RESEND_TEST_RECIPIENT` **supprimé**. Tant que ce n'est pas fait, tous les mails partent vers une seule boîte.
+- [ ] Domaine d'envoi vérifié, `RESEND_FROM_PRESENTATION` réglé (puis `RESEND_FROM_PRODUCTION` à la remise), `RESEND_TEST_RECIPIENT` **supprimé**. Tant que ce n'est pas fait, tous les mails partent vers une seule boîte.
 
 **Firebase**
 - [ ] Domaine de production autorisé, push testé sur l'adresse de production.

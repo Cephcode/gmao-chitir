@@ -61,7 +61,8 @@ Le build de production ne lit pas `.env.development.local` : tout doit être sai
 | `APP_URL` | Adresse publique de l'application, pour les liens des mails et des push. |
 | `RESEND_API_KEY` | Clé d'API Resend. Sans elle, aucun mail ne part. |
 | `RESEND_TEST_RECIPIENT` | Mode test : si défini, tous les mails partent vers cette adresse (celle du compte Resend). |
-| `RESEND_FROM` | Expéditeur. Facultatif tant que le domaine n'est pas vérifié (adresse de test Resend par défaut). |
+| `RESEND_FROM_PRESENTATION` | Expéditeur de la version de présentation (domaine du développeur vérifié chez Resend). |
+| `RESEND_FROM_PRODUCTION` | Expéditeur du client (son domaine vérifié). Vide jusqu'à la remise ; dès qu'il est défini, il remplace celui de présentation. Sans aucun des deux : adresse de test Resend. |
 | `FIREBASE_SERVICE_ACCOUNT_KEY` | Compte de service Firebase : JSON brut ou encodé en base64. Sans lui, aucun push ne part. |
 
 ## 3. Base de données
@@ -113,8 +114,9 @@ Journaux : console Supabase, Edge Functions, Logs (aucune donnée personnelle n'
 
 ### Passer Resend en envoi réel
 
-1. Dans Resend : ajouter le domaine de l'enseigne et poser les enregistrements DNS demandés, attendre l'état « vérifié ».
-2. Régler `RESEND_FROM` avec une adresse de ce domaine (par exemple `GMAO Chitir <alertes@domaine>`).
+1. Dans Resend : ajouter le domaine et poser les enregistrements DNS demandés (SPF, DKIM), attendre l'état « vérifié ». Un domaine `….vercel.app` ne convient pas (DNS non modifiables). Le plan gratuit accepte un seul domaine.
+2. Version de présentation : `supabase secrets set RESEND_FROM_PRESENTATION="GMAO Chitir <alertes@mon-domaine>"`.
+   Remise au client : vérifier son domaine dans Resend (dans son compte Resend, ou remplacer le domaine du développeur sur le plan gratuit), puis `supabase secrets set RESEND_FROM_PRODUCTION="GMAO Chitir <alertes@domaine-client>"`. Aucun code à changer.
 3. Supprimer le secret `RESEND_TEST_RECIPIENT` (`supabase secrets unset RESEND_TEST_RECIPIENT`).
 4. Déclarer une panne de test et vérifier la réception par le vrai destinataire.
 
