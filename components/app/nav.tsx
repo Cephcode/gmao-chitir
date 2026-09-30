@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/icons";
 import { buttonClass } from "@/components/ui/button";
 import { deconnexion } from "@/lib/auth-actions";
+import { oublierCetAppareil } from "@/lib/push-appareil";
 
 type NavItem = { href: string; label: string; short: string; icon: IconName };
 
@@ -109,7 +110,13 @@ export function Sidebar({
           <div className="font-semibold truncate">{firstName}</div>
           <div className="text-[13px] text-[#A89886]">{roleLabel}</div>
         </div>
-        <form action={deconnexion}>
+        {/* Avant de fermer la session : ce navigateur ne reçoit plus les push de ce compte. */}
+        <form
+          action={async () => {
+            await oublierCetAppareil();
+            await deconnexion();
+          }}
+        >
           <button
             type="submit"
             aria-label="Se déconnecter"

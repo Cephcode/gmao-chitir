@@ -5,12 +5,11 @@
 // il est enregistré côté serveur (push_tokens) pour que l'Edge Function y envoie les alertes.
 // Les réglages par type (« Mes alertes ») s'appliquent aussi aux push.
 import { useEffect, useState, useTransition } from "react";
-import { enregistrerAppareil, oublierAppareil } from "@/app/(app)/notifications/actions";
-import { obtenirJetonPush, pushSupported, supprimerJetonPush } from "@/lib/firebase-client";
+import { enregistrerAppareil } from "@/app/(app)/notifications/actions";
+import { obtenirJetonPush, pushSupported } from "@/lib/firebase-client";
+import { ecrireJetonLocal, lireJetonLocal, oublierCetAppareil } from "@/lib/push-appareil";
 import { Icon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-
-const STORAGE_KEY = "gmao-push-token";
 
 type State = "loading" | "unsupported" | "denied" | "off" | "on";
 
@@ -33,23 +32,6 @@ function explain(err: unknown): string {
   return detail ? `${hint} Détail : ${detail}` : hint;
 }
 
-function readToken() {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function writeToken(token: string | null) {
-  try {
-    if (token) localStorage.setItem(STORAGE_KEY, token);
-    else localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Stockage indisponible (navigation privée) : l'état sera recalculé à la prochaine visite.
-  }
-}
-
 export function PushToggle() {
   const [state, setState] = useState<State>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +41,7 @@ export function PushToggle() {
     pushSupported().then((ok) => {
       if (!ok) return setState("unsupported");
       if (Notification.permission === "denied") return setState("denied");
-      setState(Notification.permission === "granted" && readToken() ? "on" : "off");
+      setState(Notification.permission === "granted" && lireJetonLocal() ? "on" : "off");
     });
   }, []);
 
@@ -74,7 +56,7 @@ export function PushToggle() {
         }
         const res = await enregistrerAppareil(token, navigator.userAgent);
         if (!res.ok) throw new Error("enregistrement refusé par le serveur");
-        writeToken(token);
+        ecrireJetonLocal(token);
         setState("on");
       } catch (err) {
         console.error("Activation des notifications push", err);
@@ -85,14 +67,7 @@ export function PushToggle() {
   const couper = () =>
     startTransition(async () => {
       setError(null);
-      const token = readToken();
-      try {
-        await supprimerJetonPush();
-      } catch {
-        // Jeton déjà invalide : on l'oublie quand même côté serveur.
-      }
-      if (token) await oublierAppareil(token);
-      writeToken(null);
+      await oublierCetAppareil();
       setState("off");
     });
 
