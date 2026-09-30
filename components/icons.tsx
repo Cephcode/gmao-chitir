@@ -24,6 +24,7 @@ export const iconPaths = {
   down: "M12 5v14M6 13l6 6 6-6",
   search: "M18 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0zM20 20l-4-4",
   plus: "M12 5v14M5 12h14",
+  camera: "M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3zM12 9a4 4 0 1 0 0 8a4 4 0 1 0 0-8z",
   chevronDown: "M6 9l6 6 6-6",
   chevronUp: "M6 15l6-6 6 6",
   edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
