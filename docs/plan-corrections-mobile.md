@@ -1,0 +1,80 @@
+# Plan de corrections : retours de la recette mobile (2026-09-30)
+
+Retours du développeur après les tests sur téléphone. Chaque point indique la cause trouvée dans le code, la correction prévue et l'effort.
+On suit les phases dans l'ordre. Chaque correction fait l'objet d'un commit sur `staging`, et toute migration passe d'abord en local, avec la suite de tests (`bash supabase/tests/run.sh`), avant d'être poussée après accord.
+
+## Phase 0 : retester après le correctif `allowedDevOrigins` (fait, `a7602d8`)
+
+- **Cause** : sur téléphone (adresse réseau du PC), `next dev` bloquait les scripts, car la valeur `192.168.11.129/24` n'est pas reconnue par Next, qui attend un nom exact ou un joker. La page s'affichait mais restait inerte.
+- **Points probablement causés par ce blocage, à retester** : recherche de machine (Déclarer une panne), clic sur une machine, erreur « tree hydrated… » sur Chrome mobile, notifications qui restent « non lues ».
+- **À faire** : redémarrer `next dev`, retester ces points sur le téléphone, puis rayer ceux qui sont réglés.
+
+## Phase 1 : bugs simples (effort faible, sans migration)
+
+| # | Problème | Cause | Correction |
+|---|---|---|---|
+| 1.1 | Deux boutons « ajouter » sur mobile (Stock, Équipements) | `hidden lg:inline-flex` combiné à `buttonClass()`, qui contient déjà `inline-flex` : en CSS, `inline-flex` l'emporte sur `hidden` (`stock-list.tsx:45`, `equipment-list.tsx:70`) | Remplacer par `max-lg:hidden`, puis chercher le même motif ailleurs |
+| 1.2 | « Copier » le mot de passe plante sur Chrome mobile | `navigator.clipboard` n'existe qu'en HTTPS. En `http://192.168…` il est `undefined` (`user-form.tsx:42`). Sur Vercel (HTTPS), ça marche | Solution de repli : sélection du texte et `document.execCommand("copy")`, sinon message « Copiez-le à la main » |
+| 1.3 | Clavier ouvert : le défilement dépasse la barre du bas | Barre du bas et bouton flottant fixés en bas. Quand le clavier réduit l'écran, ils recouvrent le contenu et la marge basse devient fausse | Masquer la barre du bas et le bouton flottant quand un champ a le focus, et déclarer `interactive-widget=resizes-content` dans le viewport |
+| 1.4 | Notifications : rester « non lues » | Aujourd'hui, une notification n'est marquée lue que par « Voir » ou « Tout marquer comme lu » | Si le bug persiste après la phase 0 : marquer comme lues les notifications affichées dès l'ouverture de la page, tout en les mettant en évidence pendant cette visite, puis mettre à jour les badges |
+| 1.5 | Alerte « Urgences » désactivée mais reçue | Le contrôle SQL (`declarer_panne`) respecte le réglage. Pistes : réglage non enregistré (échec silencieux de l'upsert, ou page inerte sur mobile), ou notification créée avant le changement | Relire la ligne `notification_settings` sur l'hébergé (lecture seule), puis afficher une erreur si l'enregistrement échoue, et ajouter un test |
+
+## Phase 2 : application installable (iOS et Android)
+
+- **Constat** : il n'y a pas de manifeste (`app/manifest.ts` absent).
+  - Sur **iPhone**, le push web n'existe que si le site est **ajouté à l'écran d'accueil** (iOS 16.4 et plus), et cela demande un manifeste.
+  - Sur **Android** (Chrome), le push marche sans installation, mais l'installation donne une vraie icône et un plein écran.
+- **Correction** :
+  - `app/manifest.ts` : nom, icônes 192 et 512 px, `display: standalone`, couleurs de l'enseigne.
+  - Icône Apple.
+  - Bandeau « Installer l'application » :
+    - Android : bouton natif (`beforeinstallprompt`) ;
+    - iPhone : consigne « Partager → Sur l'écran d'accueil » ;
+    - masqué une fois l'application installée ou le bandeau refusé.
+  - Dans Mes alertes, sur iPhone hors écran d'accueil : expliquer pourquoi le push est indisponible (l'état existe déjà) et renvoyer vers la consigne.
+- **Effort** : moyen.
+
+## Phase 3 : statuts d'intervention (migration, effort moyen à fort)
+
+- **Demande** : de nouveaux statuts pour suivre une intervention sans la clôturer, y compris une urgence :
+  - « À planifier » : statut de départ, qui dit au patron que rien n'a commencé ;
+  - « En cours » ;
+  - « En attente de pièce » ;
+  - « Terminée », c'est-à-dire « faite », par la clôture.
+- **Modèle** : l'enum `intervention_status` passe de `en_cours | terminee` à `a_planifier | en_cours | en_attente_piece | terminee`.
+- **Base** :
+  - `declarer_panne` crée l'intervention en « À planifier ».
+  - Nouvelle fonction `changer_statut_intervention` (SECURITY DEFINER), pour propriétaire, éditeur et technicien de leur restaurant, sauf passage à « Terminée » : ce statut reste réservé à `cloturer_intervention`. Elle ajoute une ligne à la fiche de vie et, peut-être, prévient le déclarant.
+  - RLS `interventions_update` : « ouverte » veut dire tout statut sauf `terminee`, au lieu de `status = 'en_cours'`.
+  - `cloturer_intervention` accepte toute intervention ouverte.
+  - L'état de la machine reste en panne tant que l'intervention est ouverte.
+- **Écrans** :
+  - un sélecteur de statut dans la fiche intervention ;
+  - des badges de statut ;
+  - l'onglet « En cours » devient « Ouvertes », avec un filtre par statut ;
+  - le tableau de bord (« À traiter en priorité ») et les compteurs de la barre latérale.
+- **Tests** : mettre à jour `02_cloture`, `04_droits` et `06_notifications`, et ajouter des tests de changement de statut.
+- **Lien avec « Nouvelle intervention »** (reportée à l'étape 3) : à décider, voir les questions.
+
+## Phase 4 : photos (panne et intervention, fonctionnalité, effort moyen)
+
+- **Constat** : la colonne `interventions.photo_url` existe, mais la photo avait été mise hors périmètre.
+- **Proposition** :
+  - un bucket Supabase Storage `photos`, privé, avec des règles d'accès selon le restaurant de l'intervention ;
+  - un champ « Ajouter une photo » (`accept="image/*"`, `capture="environment"` pour ouvrir l'appareil photo sur mobile) dans Déclarer une panne et dans la fiche intervention ;
+  - une photo réduite côté navigateur (environ 1600 px, JPEG), pour ménager les données mobiles et le quota de 1 Go du plan gratuit ;
+  - un affichage en vignette dans la fiche, agrandi au toucher.
+- **À décider** : une seule photo ou plusieurs (table `intervention_photos`) ; photo aussi à la clôture (« après ») ; facturation à part ou non.
+
+## Phase 5 : catégories
+
+- **Constat** : un propriétaire ou un éditeur peut déjà créer une catégorie, mais seulement dans le formulaire d'un équipement : on tape un nom inconnu dans « Catégorie », puis on choisit « Ajouter « … » comme catégorie ». Ce n'était peut-être pas visible sur mobile à cause du blocage des scripts (phase 0).
+- **Si besoin** : un onglet « Catégories » dans Administration (liste, renommer, code de 3 lettres, supprimer si aucune machine), réservé au propriétaire et à l'éditeur. Effort faible à moyen.
+
+## Questions à trancher avant les phases 3 à 5
+
+1. **Statuts** : une panne déclarée part-elle en « À planifier » même si c'est une urgence ?
+2. **Statuts** : qui peut changer le statut ? Je propose propriétaire, éditeur et technicien. Le déclarant est-il prévenu à chaque changement ?
+3. **Nouvelle intervention** : faut-il maintenant permettre de créer une intervention sans panne (entretien, travaux) depuis l'écran Interventions, en « À planifier » ?
+4. **Photos** : une ou plusieurs par intervention ? Photo « après » à la clôture ? Dans le périmètre actuel, ou facturé à part ?
+5. **Catégories** : l'ajout dans le formulaire équipement suffit-il, ou faut-il un écran dans Administration ?
