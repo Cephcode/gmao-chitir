@@ -56,6 +56,8 @@ export function canManage(actor: Actor, target: AdminUser): boolean {
   if (actor.role === "proprietaire") return true;
   if (actor.role !== "editeur") return false;
   if (target.role === "proprietaire" || target.all_restaurants) return false;
+  // Un compte sans restaurant (dormant, restaurant supprimé) reste au propriétaire (recette S-B7).
+  if (target.restaurantIds.length === 0) return false;
   // Tous les restaurants du compte doivent être parmi ceux de l'éditeur.
   return actor.allRestaurants || target.restaurantIds.every((id) => actor.restaurantIds.includes(id));
 }

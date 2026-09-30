@@ -117,6 +117,10 @@ describe("canManage (modifier, réinitialiser, supprimer)", () => {
     assert.equal(canManage(editeur, compte({ role: "lecteur", restaurantIds: [R1, R3] })), false);
     assert.equal(canManage(editeur, compte({ role: "lecteur", restaurantIds: [R3] })), false);
   });
+  test("éditeur : pas un compte sans restaurant (recette S-B7)", () => {
+    assert.equal(canManage(editeur, compte({ role: "lecteur", restaurantIds: [] })), false);
+    assert.equal(canManage(proprio, compte({ role: "lecteur", restaurantIds: [] })), true);
+  });
   test("commentateur et lecteur : ne gèrent personne", () => {
     assert.equal(canManage(commentateur, compte({ role: "lecteur", restaurantIds: [R1] })), false);
     assert.equal(canManage(lecteur, compte({ role: "lecteur", restaurantIds: [R1] })), false);
