@@ -100,3 +100,11 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Titres** : « Urgence : Grande friteuse 2 portes, CTR1 » / « Déclarée par Awa · Ne chauffe pas » ; « … réparée, CTR1 » / « Clôturée par Salif · … » ; « … sous le seuil » / « Il reste 2, seuil 5 » (lien vers la fiche pièce). `declarer_panne`, `cloturer_intervention` et `mouvement_stock` reprises à l'identique de leur dernière version, seules ces lignes changent.
 - **Tâche quotidienne** : `taches_quotidiennes()` à 7 h UTC (heure de Ouagadougou) via pg_cron : « entretien à prévoir » 3 jours avant, « entretien en retard » chaque matin, pour propriétaires, éditeurs et commentateurs du restaurant, selon leurs réglages ; machines hors service exclues ; au plus une notification par personne, machine, type et jour. Non appelable par les utilisateurs.
 - **Vérifié** en local : titres, rappels, réglage coupé respecté, hors service exclu, pas de doublon, planification enregistrée.
+
+## 2026-09-30 · Envoi des notifications : mail et push (étape 7b)
+- **Décision** : migration `20260930190000_envoi_notifications.sql` : colonne `notifications.delivered_at`, table `push_tokens` (RLS : chacun ses appareils), trigger `after insert` sur `notifications` qui appelle l'Edge Function `envoyer-notification` via pg_net (asynchrone, rien ne part si la transaction est annulée).
+- **Edge Function** (`supabase/functions/envoyer-notification`, `verify_jwt = false`) : réserve la notification en une instruction (`delivered_at`) avant d'envoyer, donc pas de double envoi, et un appel avec un id quelconque ne fait rien : aucun secret n'est nécessaire dans la base. Push Firebase HTTP v1 (jeton OAuth signé avec le compte de service, jetons expirés supprimés) vers tous les appareils ; mail Resend pour urgences et pannes. Aucune donnée personnelle dans les journaux.
+- **Mode test Resend** : domaine non vérifié, donc `RESEND_TEST_RECIPIENT` reçoit tous les mails, avec le vrai destinataire indiqué. À retirer (et `RESEND_FROM` à régler) quand le domaine sera vérifié.
+- **Liens** : `APP_URL` = https://gmao-chitir.vercel.app.
+- **Vérifié** en local : trigger mis en file pg_net, RLS de `push_tokens`, fonction servie par le runtime Deno (réservation, non-répétition, id invalide refusé).
+- **Outils** : `supabase/functions` exclu du typage et du lint de Next (code Deno).
