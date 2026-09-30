@@ -144,3 +144,13 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **État de la machine** : inchangé par le statut, elle reste en panne tant que l'intervention est ouverte.
 - **Écrans** : sélecteur dans la fiche, onglet « Ouvertes » avec puce « Statut », indicateur « Urgences ouvertes ».
 - **Migrations** : `20260930230000` (valeurs d'enum, seules dans leur transaction) et `20260930230100` (fonctions, politique), locales, à pousser après accord.
+
+## 2026-09-30 · Catégories (phase 5 des corrections mobiles)
+- **Écran** : onglet « Catégories » dans Administration, pour le propriétaire et l'éditeur (l'éditeur voit Utilisateurs et Catégories). Ajouter, modifier nom, code et icône, supprimer si aucune machine.
+- **Écritures en direct avec la session de l'utilisateur** (pas de fonction SQL) : les RLS autorisaient déjà ajout et modification au propriétaire et à l'éditeur ; la suppression leur est ouverte aussi. L'action serveur relit l'acteur en base avant d'écrire.
+- **Suppression** : la clé étrangère `equipments.category_id` passe de `on delete set null` à `on delete restrict`. La base refuse donc de supprimer une catégorie utilisée, même par une machine d'un restaurant que l'éditeur ne voit pas.
+- **Nombre de machines** : compté sur toute la chaîne, avec la clé secrète côté serveur (après contrôle du rôle), pour que l'éditeur ne croie pas libre une catégorie utilisée ailleurs.
+- **Unicité** : nom unique sans tenir compte des majuscules (nouvel index), code déjà unique. Format du code vérifié en base (`^[A-Z]{3}[0-9]*$`, pour garder les codes `FRI2` que peut créer `code_categorie_libre`) ; l'écran impose 3 lettres.
+- **Code** : proposé depuis le nom (3 premières lettres, puis autres lettres du nom si pris), modifiable. Le changer ne renomme pas les machines existantes.
+- **Icône** : colonne `categories.icon` (facultative), choisie parmi 9 icônes. Sans icône : repère par code des 6 catégories d'origine, sinon clé à molette. Une catégorie créée depuis le formulaire équipement n'a pas d'icône.
+- **Migration** : `20260930230200_categories_administration.sql`, locale, à pousser après accord.

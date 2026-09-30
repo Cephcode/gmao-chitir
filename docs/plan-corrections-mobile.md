@@ -71,7 +71,13 @@ On suit les phases dans l'ordre. Chaque correction fait l'objet d'un commit sur 
   - un affichage en vignette dans la fiche, agrandi au toucher.
 - **À décider** : une seule photo ou plusieurs (table `intervention_photos`) ; photo aussi à la clôture (« après ») ; facturation à part ou non.
 
-## Phase 5 : catégories
+## Phase 5 : catégories (fait en local, migration à pousser)
+
+- **Fait** (2026-09-30) : commits `a246c69` (base), `253059d` (icônes), `bd0b8c4` (écran), `8877993` (tests). Suite de tests : 551 réussis, 0 échoué.
+- **Migration à pousser après accord** : `20260930230200_categories_administration.sql` (colonne `icon`, suppression par l'éditeur, clé étrangère `restrict`, nom unique, format du code).
+- **Avant la migration**, l'application ne plante pas (catégories lues avec `categories(*)`), mais l'écran Catégories ne peut pas enregistrer (colonne `icon` absente) et l'éditeur ne peut pas supprimer : pousser la migration avant de tester l'écran.
+- **Choix** : voir `docs/journal-decisions.md` (2026-09-30, Catégories).
+
 
 - **Constat** : un propriétaire ou un éditeur peut déjà créer une catégorie, mais seulement dans le formulaire d'un équipement : on tape un nom inconnu dans « Catégorie », puis on choisit « Ajouter « … » comme catégorie ». Ce n'était peut-être pas visible sur mobile à cause du blocage des scripts (phase 0).
 - **Si besoin** : un onglet « Catégories » dans Administration (liste, renommer, code de 3 lettres, supprimer si aucune machine), réservé au propriétaire et à l'éditeur. Effort faible à moyen.
