@@ -116,7 +116,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
 
       {/* 3 colonnes seulement sur grand écran (xl) : entre 1024 et 1280 px, avec le menu
           latéral, la liste serait écrasée ; « Mes alertes » passe alors dessous. */}
-      <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)_300px] items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)_300px] items-start">
         {/* Ordinateur : catégories */}
         <nav aria-label="Catégories" className="hidden lg:flex flex-col gap-1">
           {[{ value: "", label: "Toutes", icon: null, types: [] as string[] }, ...CATEGORIES].map((c) => {

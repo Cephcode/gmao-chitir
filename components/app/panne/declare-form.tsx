@@ -420,7 +420,7 @@ export function DeclareForm({
           {/* ---------- 3. L'urgence ---------- */}
           <section className={`flex flex-col gap-3 ${step === 1 ? "max-lg:hidden" : ""}`}>
             <SectionTitle n={3}>Est-ce urgent ?</SectionTitle>
-            <div role="radiogroup" aria-label="Est-ce urgent ?" className="grid gap-3 lg:grid-cols-2">
+            <div role="radiogroup" aria-label="Est-ce urgent ?" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {URGENCY.map((u) => {
                 const on = v.type === u.value;
                 return (

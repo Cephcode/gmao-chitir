@@ -229,7 +229,9 @@ export default async function TableauDeBord(props: PageProps<"/">) {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-start">
+      {/* grid-cols-1 = minmax(0, 1fr) : sans lui, la colonne implicite prend la largeur du
+          plus long texte (même tronqué) et la page déborde à droite sur mobile. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-start">
         {/* À traiter en priorité */}
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
