@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MaintenanceDoneButton } from "@/components/app/equipements/maintenance-done-button";
+import { SheetTitle } from "@/components/app/sheet-title";
 
 type OpenIntervention = {
   id: string;
@@ -204,7 +205,7 @@ export async function EquipmentSheet({
           <Icon name={categoryIcon(e.category?.code)} />
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-2">
-          <h2 className="font-display text-[22px] font-semibold m-0 leading-tight">{e.name}</h2>
+          <SheetTitle>{e.name}</SheetTitle>
           <div className="text-text-muted text-[14px]">{subtitle}</div>
           <div className="flex flex-wrap gap-1.5">
             <StatusBadge status={STATE_BADGE[e.state]} />

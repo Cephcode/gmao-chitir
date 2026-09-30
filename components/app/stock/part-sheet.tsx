@@ -8,6 +8,7 @@ import { Icon } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { StockControls } from "@/components/app/stock/stock-controls";
+import { SheetTitle } from "@/components/app/sheet-title";
 
 const REASON_LABEL = { livraison: "Livraison", ajustement: "Correction d'inventaire" } as const;
 
@@ -52,7 +53,7 @@ export async function PartSheet({ part: p, role, query }: { part: PartRow; role:
       </div>
 
       <header className="flex flex-col gap-2">
-        <h2 className="font-display text-[22px] font-semibold m-0 leading-tight">{p.name}</h2>
+        <SheetTitle>{p.name}</SheetTitle>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={isLow(p) ? "sousLeSeuil" : "suffisant"} />
           <span className="text-text-muted text-[14px]">{p.code}</span>

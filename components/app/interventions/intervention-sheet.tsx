@@ -19,6 +19,7 @@ import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ClosingForm } from "@/components/app/interventions/closing-form";
+import { SheetTitle } from "@/components/app/sheet-title";
 
 const TZ = "Africa/Ouagadougou";
 
@@ -79,7 +80,7 @@ export async function InterventionSheet({
           <StatusBadge status={TYPE_BADGE[i.type]} />
           <StatusBadge status={open ? "enCours" : "termine"} />
         </div>
-        <h2 className="font-display text-[22px] font-semibold m-0 leading-tight">
+        <SheetTitle>
           {i.equipment ? (
             <Link href={`/equipements/${i.equipment.id}`} className="text-text hover:underline">
               {machineName(i)}
@@ -87,7 +88,7 @@ export async function InterventionSheet({
           ) : (
             machineName(i)
           )}
-        </h2>
+        </SheetTitle>
         <div className="text-text-muted text-[14px]">{meta}</div>
         {i.description && (
           <p className="m-0 rounded bg-background px-3.5 py-3 text-[15px]">« {i.description} »</p>
