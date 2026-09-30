@@ -2,6 +2,7 @@
 
 // Choix rapide segmente: une valeur parmi quelques-unes (ex. frequence d'entretien).
 // La puce active passe en brun plein avec une coche ; les autres restent a contour.
+// value null : aucune puce choisie (choix obligatoire sans valeur par defaut).
 
 import { Icon } from "@/components/icons";
 
@@ -14,7 +15,7 @@ export function SegmentedControl<T extends string>({
   ariaLabel,
 }: {
   options: readonly Option<T>[];
-  value: T;
+  value: T | null;
   onChange: (value: T) => void;
   ariaLabel?: string;
 }) {

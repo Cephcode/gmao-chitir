@@ -1,5 +1,6 @@
 // Confirmation « Panne envoyée » (M-05c). Récapitulatif de l'intervention créée.
 // L'équipe du restaurant a été notifiée dans l'application par declarer_panne.
+import { STATUS_BADGE, type InterventionStatus } from "@/lib/intervention-status";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 type Intervention = {
   id: string;
   type: "normal" | "urgence" | "alerte";
-  status: "en_cours" | "terminee";
+  status: InterventionStatus;
   equipment_id: string | null;
   equipment_free_text: string | null;
   equipments: { name: string } | null;
@@ -57,7 +58,7 @@ export default async function PanneEnvoyeePage(props: PageProps<"/panne/envoyee/
           <StatusBadge status={i.type === "urgence" ? "urgence" : "normal"} />
         </Row>
         <Row label="Suivi">
-          <StatusBadge status={i.status === "en_cours" ? "enCours" : "termine"} />
+          <StatusBadge status={STATUS_BADGE[i.status]} />
         </Row>
       </Card>
       <div className="w-full flex flex-col gap-3">

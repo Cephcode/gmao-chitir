@@ -1,6 +1,8 @@
 // Déclarer une panne (M-05 / O-06). Tous les rôles, sur leurs restaurants (RLS).
 // ?equipement=ID : machine déjà choisie (depuis sa fiche), on arrive à l'étape 2 sur mobile.
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/session";
+import { canSetStatus } from "@/lib/intervention-status";
 import { DeclareForm, type Machine, type OpenPanne } from "@/components/app/panne/declare-form";
 
 type Row = {
@@ -16,13 +18,14 @@ export default async function PannePage(props: PageProps<"/panne">) {
   const equipementParam = typeof searchParams.equipement === "string" ? searchParams.equipement : null;
 
   const supabase = await createClient();
-  const [restaurantsRes, equipmentsRes, openRes] = await Promise.all([
+  const [profile, restaurantsRes, equipmentsRes, openRes] = await Promise.all([
+    getProfile(),
     supabase.from("restaurants").select("id, short_code, name").order("short_code"),
     supabase.from("equipments").select("id, name, code, restaurant_id, categories(name, code)"),
     supabase
       .from("interventions")
       .select("id, equipment_id, reported_at, type")
-      .eq("status", "en_cours")
+      .neq("status", "terminee")
       .not("equipment_id", "is", null)
       .order("reported_at", { ascending: false }),
   ]);
@@ -56,6 +59,7 @@ export default async function PannePage(props: PageProps<"/panne">) {
       openByEquipment={openByEquipment}
       initialEquipmentId={initial?.id ?? null}
       closeHref={initial ? `/equipements/${initial.id}` : "/"}
+      canChooseStatus={canSetStatus(profile?.role)}
     />
   );
 }

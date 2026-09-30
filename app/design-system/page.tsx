@@ -23,7 +23,7 @@ const frequences = [
 const badgeGroups: { name: string; keys: StatusKey[] }[] = [
   { name: "Équipement", keys: ["operationnel", "enPanne", "enMaintenance", "horsService"] },
   { name: "Entretien", keys: ["aJour", "enRetard"] },
-  { name: "Intervention", keys: ["enCours", "termine", "urgence", "normal"] },
+  { name: "Intervention", keys: ["aPlanifier", "enCours", "enAttentePiece", "termine", "urgence", "normal"] },
   { name: "Stock", keys: ["suffisant", "sousLeSeuil"] },
 ];
 

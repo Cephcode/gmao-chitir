@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { Field, TextInput, focusHalo } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { OPEN_STATUSES, STATUS_LABELS } from "@/lib/intervention-status";
 
 export type Machine = {
   id: string;
@@ -78,12 +79,14 @@ export function DeclareForm({
   openByEquipment,
   initialEquipmentId,
   closeHref,
+  canChooseStatus,
 }: {
   restaurants: { id: string; short_code: string; name: string }[];
   machines: Machine[];
   openByEquipment: Record<string, OpenPanne>;
   initialEquipmentId: string | null;
   closeHref: string;
+  canChooseStatus: boolean; // propriétaire, éditeur, commentateur : état obligatoire
 }) {
   const initialMachine = machines.find((m) => m.id === initialEquipmentId) ?? null;
   const [v, setV] = useState<PanneInput>({
@@ -93,6 +96,7 @@ export function DeclareForm({
     symptoms: [],
     description: "",
     type: null,
+    status: null,
   });
   const [notListed, setNotListed] = useState(false); // « Je ne trouve pas la machine »
   const [step, setStep] = useState<1 | 2>(initialMachine ? 2 : 1); // mobile seulement
@@ -143,7 +147,7 @@ export function DeclareForm({
     });
   };
 
-  const error = (f: "machine" | "type") => (result && result.field === f ? result.error : undefined);
+  const error = (f: "machine" | "type" | "status") => (result && result.field === f ? result.error : undefined);
   const machineLabel = machine
     ? [restaurant?.short_code, machine.categoryName].filter(Boolean).join(" · ")
     : `${restaurant?.short_code ?? ""} · machine hors liste`;
@@ -452,6 +456,20 @@ export function DeclareForm({
             </div>
             {error("type") && <p className="text-danger text-[14px] font-semibold m-0">{error("type")}</p>}
           </section>
+
+          {/* ---------- 4. L'état de l'intervention (propriétaire, éditeur, commentateur) ---------- */}
+          {canChooseStatus && (
+            <section className={`flex flex-col gap-3 ${step === 1 ? "max-lg:hidden" : ""}`}>
+              <SectionTitle n={4}>État de l&apos;intervention</SectionTitle>
+              <SegmentedControl
+                ariaLabel="État de l'intervention"
+                options={OPEN_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
+                value={v.status}
+                onChange={(s) => set("status", s)}
+              />
+              {error("status") && <p className="text-danger text-[14px] font-semibold m-0">{error("status")}</p>}
+            </section>
+          )}
         </div>
 
         {/* Pied : mobile étape 1 = « Continuer » seulement pour une machine hors liste */}

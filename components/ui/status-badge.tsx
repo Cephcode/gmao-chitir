@@ -29,8 +29,10 @@ export const statuses = {
   aJour: { label: "À jour", icon: "check", family: "success" },
   enRetard: { label: "En retard", icon: "clock", family: "warning" },
   // Intervention
+  aPlanifier: { label: "À planifier", icon: "clock", family: "neutral" },
   enCours: { label: "En cours", icon: "refresh", family: "info" },
-  termine: { label: "Terminé", icon: "check", family: "success" },
+  enAttentePiece: { label: "En attente de pièce", icon: "box", family: "warning" },
+  termine: { label: "Terminée", icon: "check", family: "success" },
   urgence: { label: "Urgence", icon: "bolt", family: "danger" },
   normal: { label: "Normal", icon: "wrench", family: "neutralOutline" },
   // Type alerte : badge neutre (décision : pas de couleur de danger pour une alerte)
