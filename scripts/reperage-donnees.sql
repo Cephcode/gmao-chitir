@@ -29,3 +29,18 @@ order by i.created_at;
 select 'catégorie' as quoi, name || ' (' || code || ')' as detail from categories where code not in ('REF','CUI','CLI','VIT','VEN','BOI')
 union all select 'pièce', name || ' : ' || quantity from parts
 union all select 'restaurant', short_code || ' ' || name from restaurants;
+
+-- 5. Machines ajoutées, modifiées ou pas opérationnelles depuis l'import
+select e.code, e.name, e.state, e.created_at::date as ajoutee_le,
+       case when e.created_at > (select min(created_at) + interval '1 hour' from equipments) then 'ajoutée'
+            when e.updated_at > e.created_at + interval '1 minute' then 'modifiée' else '' end as changement
+from equipments e
+where e.created_at > (select min(created_at) + interval '1 hour' from equipments)
+   or e.updated_at > e.created_at + interval '1 minute'
+   or e.state <> 'operationnel'
+order by e.code;
+-- 6. Plans d'entretien
+select e.code, e.name, p.frequency, p.last_done_at, p.next_due_at
+from maintenance_plans p join equipments e on e.id = p.equipment_id order by e.code;
+-- 7. Pannes déclarées sans machine (texte libre)
+select created_at::date, equipment_free_text from interventions where equipment_id is null;
