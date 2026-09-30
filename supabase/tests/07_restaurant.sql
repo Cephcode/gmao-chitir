@@ -68,6 +68,8 @@ select is(tests.essai('com1', $$ select 1 from (select ajouter_restaurant('Par t
 select is(tests.essai('lec1', $$ select 1 from (select ajouter_restaurant('Par lecteur', 'TSTG')) s $$), 'refusé', 'lecteur : ajout refusé');
 select is(tests.essai('ed1', $$ with t as (insert into restaurants (name, short_code) values ('Direct', 'TSTH') returning 1) select count(*) from t $$),
           'refusé', 'éditeur : création directe d''un restaurant refusée');
+select is(tests.essai('prop', $$ with t as (insert into restaurants (name, short_code) values ('Direct', 'TSTH') returning 1) select count(*) from t $$),
+          'refusé', 'propriétaire : création directe refusée (passer par ajouter_restaurant)');
 
 -- Atomicité : si un code copié existe déjà, rien n'est créé
 insert into equipments (restaurant_id, code, name) values (tests.id('R2'), 'TSTK-FRI-01', 'Conflit');

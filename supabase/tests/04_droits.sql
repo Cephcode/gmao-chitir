@@ -103,5 +103,17 @@ select is(tests.essai('prop', $$with t as (delete from equipments where id = tes
 select is(tests.essai('prop', $$select 1 from (select cloturer_intervention(tests.id('I2'), 'ok', 'operationnel')) s$$), 'autorisé',
           'prop (tous restaurants) | clôturer une intervention de R2');
 
+-- Recette lot 3 : un compte Auth sans profil (pas de ligne dans users) ne lit rien.
+insert into tests.ids (nom) values ('sansprofil');
+select is(tests.essai('sansprofil', sql), 'refusé', 'compte sans profil | ' || action)
+from (values
+  ('voir le stock', $$select count(*) from parts$$),
+  ('voir les mouvements de stock', $$select count(*) from stock_movements$$),
+  ('voir les catégories', $$select count(*) from categories$$),
+  ('voir les marques', $$select count(*) from brands$$),
+  ('voir les liens pièce-machine', $$select count(*) from part_compatibilities$$),
+  ('voir une machine', $$select count(*) from equipments$$)
+) as v(action, sql);
+
 select * from finish();
 rollback;
