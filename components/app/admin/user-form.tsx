@@ -23,8 +23,34 @@ import { Field, TextInput } from "@/components/ui/field";
 
 type RoleOption = { value: Role; label: string; help: string };
 
+// Copie dans le presse-papiers. navigator.clipboard n'existe qu'en https : sinon (adresse
+// du réseau local en développement, vieux navigateur), repli sur l'ancienne commande copy.
+// Renvoie false si rien n'a marché : l'utilisateur copie alors à la main (texte sélectionnable).
+async function copier(texte: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(texte);
+      return true;
+    }
+  } catch {}
+  try {
+    const zone = document.createElement("textarea");
+    zone.value = texte;
+    zone.setAttribute("readonly", "");
+    zone.style.position = "fixed";
+    zone.style.opacity = "0";
+    document.body.appendChild(zone);
+    zone.select();
+    const ok = document.execCommand("copy");
+    zone.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 function TempPassword({ identifiant, password }: { identifiant: string; password: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<boolean | null>(null);
   return (
     <div className="flex flex-col gap-3 p-4 rounded-lg bg-success-bg shadow-[inset_0_0_0_1px_#A8DCC0]">
       <div className="flex items-center gap-2 font-bold text-success">
@@ -39,11 +65,10 @@ function TempPassword({ identifiant, password }: { identifiant: string; password
         <Button
           variant="secondary"
           onClick={async () => {
-            await navigator.clipboard.writeText(password);
-            setCopied(true);
+            setCopied(await copier(password));
           }}
         >
-          {copied ? "Copié" : "Copier"}
+          {copied === true ? "Copié" : copied === false ? "Copiez à la main" : "Copier"}
         </Button>
       </div>
     </div>
