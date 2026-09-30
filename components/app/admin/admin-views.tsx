@@ -13,25 +13,39 @@ export function AdminHeader({
   tab,
   userCount,
   restaurantCount,
+  categoryCount,
 }: {
   actor: Actor;
-  tab: "utilisateurs" | "restaurants";
+  tab: "utilisateurs" | "restaurants" | "categories";
   userCount: number;
   restaurantCount: number;
+  // Affiché seulement sur l'onglet Catégories (inutile de compter sur les autres pages).
+  categoryCount?: number;
 }) {
   const isOwner = actor.role === "proprietaire";
+  // Onglets : l'éditeur voit Utilisateurs et Catégories, le propriétaire aussi Restaurants.
+  // Sur mobile, les nombres sont masqués pour que les trois onglets tiennent sur 390 px.
+  const tabs: { key: string; label: string; count?: number }[] = [
+    { key: "utilisateurs", label: "Utilisateurs", count: userCount },
+    ...(isOwner ? [{ key: "restaurants", label: "Restaurants", count: restaurantCount }] : []),
+    { key: "categories", label: "Catégories", count: categoryCount },
+  ];
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center gap-3">
         <div className="flex-1">
           <h1 className="font-display text-[22px] lg:text-[32px] font-semibold m-0 leading-tight">Administration</h1>
           <p className="m-0 text-text-muted text-[14px]">
-            {isOwner ? "Comptes et restaurants de la chaîne." : "Comptes de vos restaurants."}
+            {isOwner ? "Comptes, restaurants et catégories de la chaîne." : "Comptes de vos restaurants et catégories d'équipements."}
           </p>
         </div>
         {tab === "utilisateurs" ? (
           <Link href="/admin/utilisateurs/nouveau" className={buttonClass({ variant: "secondary" })}>
             <Icon name="plus" /> <span className="hidden sm:inline">Créer un compte</span>
+          </Link>
+        ) : tab === "categories" ? (
+          <Link href="/admin/categories/nouveau" className={buttonClass({ variant: "secondary" })}>
+            <Icon name="plus" /> <span className="hidden sm:inline">Ajouter une catégorie</span>
           </Link>
         ) : (
           isOwner && (
@@ -41,25 +55,21 @@ export function AdminHeader({
           )
         )}
       </header>
-      {isOwner && (
-        <nav aria-label="Sections" className="flex gap-6 border-b border-border">
-          {[
-            { key: "utilisateurs", label: `Utilisateurs (${userCount})` },
-            { key: "restaurants", label: `Restaurants (${restaurantCount})` },
-          ].map((t) => (
-            <Link
-              key={t.key}
-              href={`/admin/${t.key}`}
-              aria-current={tab === t.key ? "page" : undefined}
-              className={`py-2.5 -mb-px text-[15px] font-semibold border-b-2 ${
-                tab === t.key ? "border-orange text-text" : "border-transparent text-text-muted hover:text-text"
-              }`}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <nav aria-label="Sections" className="flex gap-6 border-b border-border">
+        {tabs.map((t) => (
+          <Link
+            key={t.key}
+            href={`/admin/${t.key}`}
+            aria-current={tab === t.key ? "page" : undefined}
+            className={`py-3 -mb-px text-[15px] font-semibold whitespace-nowrap border-b-2 ${
+              tab === t.key ? "border-orange text-text" : "border-transparent text-text-muted hover:text-text"
+            }`}
+          >
+            {t.label}
+            {t.count !== undefined && <span className="max-sm:hidden"> ({t.count})</span>}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }
