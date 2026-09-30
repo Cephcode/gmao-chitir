@@ -18,7 +18,8 @@ ENV_FILE="${ENV_FILE:-.env.development.local}"
 # Secrets serveur : stockés en « sensitive » (illisibles ensuite dans l'interface Vercel).
 SENSITIVE="SUPABASE_SECRET_KEY"
 
-[ -f .vercel/project.json ] || { echo "Projet non lié : lancez d'abord « vercel link »."; exit 1; }
+# Lien avec le projet : project.json (ancien CLI) ou repo.json (CLI récent, lien par dépôt git).
+[ -f .vercel/project.json ] || [ -f .vercel/repo.json ] || { echo "Projet non lié : lancez d'abord « vercel link »."; exit 1; }
 [ -f "$ENV_FILE" ] || { echo "Fichier $ENV_FILE introuvable."; exit 1; }
 
 # Noms = lignes « NOM=… » non commentées de .env.example.
