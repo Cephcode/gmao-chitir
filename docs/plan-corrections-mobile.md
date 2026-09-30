@@ -34,7 +34,12 @@ On suit les phases dans l'ordre. Chaque correction fait l'objet d'un commit sur 
   - Dans Mes alertes, sur iPhone hors écran d'accueil : expliquer pourquoi le push est indisponible (l'état existe déjà) et renvoyer vers la consigne.
 - **Effort** : moyen.
 
-## Phase 3 : statuts d'intervention (migration, effort moyen à fort)
+## Phase 3 : statuts d'intervention (fait en local, migrations à pousser)
+
+- **Fait** (2026-09-30) : commits `763e70f` (base), `152c00d` (déclaration), `ccd4f54` (fiche et liste), `43d6dbb` (Mes alertes), `9d295fe` (tests). Suite de tests : 514 réussis, 0 échoué.
+- **Migrations à pousser après accord** : `20260930230000_statuts_intervention_valeurs.sql`, `20260930230100_statuts_intervention_fonctions.sql`.
+- **Choix** : notification de type `statut_intervention` (réglage « Suivi de mes pannes », sans mail) ; ligne de fiche de vie de type `modification` ; état de la machine inchangé par le statut ; indicateur « Urgences ouvertes ».
+
 
 - **Demande** : de nouveaux statuts pour suivre une intervention sans la clôturer, y compris une urgence :
   - « À planifier » : statut de départ, qui dit au patron que rien n'a commencé ;

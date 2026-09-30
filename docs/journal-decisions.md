@@ -135,3 +135,12 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Décision** : aucun mail n'est envoyé à la personne ajoutée. Le mot de passe temporaire est affiché une seule fois à celui qui crée le compte, qui le transmet.
 - **Raison** : choix du développeur ; fonctionnalité hors périmètre, à proposer et facturer à part si le client la demande.
 - **Pistes si demandé** : mail de bienvenue sans mot de passe (recommandé), mail avec mot de passe temporaire, ou lien d'invitation Supabase. Envoi via l'Edge Function (clé Resend déjà en secret). Nécessite un domaine vérifié chez Resend.
+
+## 2026-09-30 · Statuts d'intervention (phase 3 des corrections mobiles)
+- **Décision** : `intervention_status` = `a_planifier`, `en_cours`, `en_attente_piece`, `terminee`. « Ouverte » = tout statut sauf `terminee` (RLS, clôture, tableau de bord, compteurs, doublon de panne, fiche machine).
+- **Déclaration** : état obligatoire à l'écran pour propriétaire, éditeur et commentateur (sauf « Terminée », refusé en base) ; lecteur forcé à « À planifier » en base. Valeur par défaut de la colonne : `a_planifier`.
+- **Changement** : `changer_statut_intervention` (fiche de vie « Statut : ancien → nouveau », type `modification`), jamais vers « Terminée » (clôture seulement). Le statut n'est pas modifiable en direct.
+- **Déclarant prévenu** : nouveau type de notification `statut_intervention`, réglable (« Suivi de mes pannes »), push seulement, pas de mail.
+- **État de la machine** : inchangé par le statut, elle reste en panne tant que l'intervention est ouverte.
+- **Écrans** : sélecteur dans la fiche, onglet « Ouvertes » avec puce « Statut », indicateur « Urgences ouvertes ».
+- **Migrations** : `20260930230000` (valeurs d'enum, seules dans leur transaction) et `20260930230100` (fonctions, politique), locales, à pousser après accord.
