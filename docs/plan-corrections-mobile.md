@@ -61,7 +61,14 @@ On suit les phases dans l'ordre. Chaque correction fait l'objet d'un commit sur 
 - **Tests** : mettre à jour `02_cloture`, `04_droits` et `06_notifications`, et ajouter des tests de changement de statut.
 - **Lien avec « Nouvelle intervention »** (reportée à l'étape 3) : à décider, voir les questions.
 
-## Phase 4 : photos (panne et intervention, fonctionnalité, effort moyen)
+## Phase 4 : photos (fait en local, migration à pousser)
+
+- **Fait** (2026-09-30) : commits `8bb19d3` (base), `11421fb` (compression, envoi, vignettes), `0223531` (déclaration), `ff8e1ab` (fiche et clôture), `6f31fbb` (tests). Suite de tests : 634 réussis, 0 échoué.
+- **Migration à pousser après accord** : `20260930230300_photos_interventions.sql` (bucket privé `photos`, table `intervention_photos`, fonctions `photos_max_par_type`, `photo_intervention_accessible`, `photo_objet_ajout_autorise`, `ajouter_photo_intervention`, politiques de `storage.objects`).
+- **Avant la migration**, l'application ne plante pas : la fiche s'affiche sans photos, et un envoi de photo échoue avec un message (la déclaration ou la clôture, elle, passe). Pousser la migration avant de tester les photos.
+- **Changer la limite** (3 « avant », 3 « après ») : `PHOTOS_MAX_PAR_TYPE` dans `lib/photos.ts` **et** la fonction SQL `photos_max_par_type()` dans une nouvelle migration. Les deux doivent rester égales.
+- **Choix** : voir `docs/journal-decisions.md` (2026-09-30, Photos d'intervention). Le champ n'a pas d'attribut `capture` (appareil photo ou galerie).
+
 
 - **Constat** : la colonne `interventions.photo_url` existe, mais la photo avait été mise hors périmètre.
 - **Proposition** :

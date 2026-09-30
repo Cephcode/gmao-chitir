@@ -75,6 +75,7 @@ Le build de production ne lit pas `.env.development.local` : tout doit être sai
   ```
   Sans cette ligne, l'appel est refusé.
 - Les écritures sur plusieurs tables (déclarer, clôturer, entretien, stock, ajout de restaurant) passent par des fonctions `SECURITY DEFINER` qui vérifient rôle et restaurant.
+- **Photos d'intervention** : bucket Storage `photos`, **privé** (migration `20260930230300`), affiché par des URL signées d'une heure. Chemin `{restaurant_id}/{intervention_id}/{uuid}.jpg`, photos réduites à 1600 px en JPEG dans le navigateur (quelques centaines de Ko). Le plan gratuit de Supabase donne **1 Go de Storage** : surveiller l'usage dans la console (Storage). Limite de 3 photos « avant » et 3 « après » par intervention, à changer à deux endroits : `PHOTOS_MAX_PAR_TYPE` dans `lib/photos.ts` et la fonction SQL `photos_max_par_type()` (nouvelle migration).
 - Le trigger d'envoi appelle l'adresse de l'Edge Function **hébergée**, écrite dans la migration `20260930190000`. En local, une notification validée déclenche donc un appel vers l'hébergé, qui ne trouve pas l'id et ne fait rien.
 
 ## 4. Tests
@@ -141,6 +142,7 @@ Journaux : console Supabase, Edge Functions, Logs (aucune donnée personnelle n'
   supabase db dump --data-only -f sauvegarde-donnees.sql
   ```
 - Ces fichiers contiennent des données personnelles : les garder hors du dépôt.
+- Ces copies ne contiennent pas les fichiers du bucket `photos` (seulement leurs lignes) : les télécharger depuis la console (Storage) si besoin.
 
 ## 10. Comptes et connexion
 

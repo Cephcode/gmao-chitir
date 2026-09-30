@@ -154,3 +154,15 @@ Une entrée par décision : date, décision, raison, ce qui a été écarté.
 - **Code** : proposé depuis le nom (3 premières lettres, puis autres lettres du nom si pris), modifiable. Le changer ne renomme pas les machines existantes.
 - **Icône** : colonne `categories.icon` (facultative), choisie parmi 9 icônes. Sans icône : repère par code des 6 catégories d'origine, sinon clé à molette. Une catégorie créée depuis le formulaire équipement n'a pas d'icône.
 - **Migration** : `20260930230200_categories_administration.sql`, locale, à pousser après accord.
+
+## 2026-09-30 · Photos d'intervention (phase 4 des corrections mobiles)
+- **Modèle** : table `intervention_photos` (intervention, type `avant` ou `apres`, chemin Storage unique, auteur, date), suppression en cascade avec l'intervention. La colonne `interventions.photo_url` (une seule photo, jamais utilisée) est laissée en place.
+- **Stockage** : bucket `photos` privé (2 Mo par fichier, jpeg, png, webp), chemin `{restaurant_id}/{intervention_id}/{uuid}.jpg`, URL signées d'une heure générées côté serveur. Politiques Storage : lecture, dépôt et retrait seulement si l'utilisateur a accès au restaurant du chemin et que l'intervention appartient à ce restaurant ; pas de modification ; retrait par l'auteur du fichier, le propriétaire ou l'éditeur. Garde-fou quota : 12 fichiers au plus par dossier d'intervention.
+- **Droits** : « avant » par tous les rôles (le lecteur peut déclarer une panne), tant que l'intervention est ouverte ; « après » par propriétaire, éditeur, commentateur, une fois l'intervention terminée. Retrait d'une photo : son auteur, le propriétaire ou l'éditeur.
+- **Ajout** : fonction `ajouter_photo_intervention` seulement (pas de politique d'insertion). Elle verrouille l'intervention avant de compter : la limite tient même pour deux ajouts simultanés (test de concurrence).
+- **Limite** : 3 par type, réglable à deux endroits égaux : `PHOTOS_MAX_PAR_TYPE` (`lib/photos.ts`) et `photos_max_par_type()` (SQL).
+- **Envoi** : compression dans le navigateur (1600 px, JPEG 0,8 puis moins si le fichier dépasse 1 Mo, orientation EXIF appliquée), dépôt direct dans Storage depuis le navigateur (pas de limite de taille des actions serveur), puis enregistrement par une action serveur qui revérifie rôle, restaurant, statut et chemin. Aucune dépendance ajoutée.
+- **Ordre** : la déclaration ou la clôture passe d'abord, les photos suivent. Si des photos échouent, l'action principale reste faite et l'écran le dit (`?photos_echec=N`). Les fichiers déposés mais non enregistrés sont retirés.
+- **Champ** : `accept="image/*"` sans `capture`, pour que le téléphone propose appareil photo ou galerie.
+- **Fichiers orphelins** : Supabase interdit la suppression directe dans `storage.objects` en SQL. Si une intervention est supprimée (l'application ne le fait pas), ses fichiers restent dans le bucket et se retirent depuis la console.
+- **Migration** : `20260930230300_photos_interventions.sql`, locale, à pousser après accord.
