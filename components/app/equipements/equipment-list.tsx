@@ -67,7 +67,7 @@ export function EquipmentList({
             </Link>
             <Link
               href={`/equipements/nouveau${query}`}
-              className={`hidden lg:inline-flex ${buttonClass()}`}
+              className={`max-lg:hidden ${buttonClass()}`}
             >
               <Icon name="plus" /> Ajouter un équipement
             </Link>

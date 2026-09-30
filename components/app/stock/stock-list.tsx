@@ -42,7 +42,7 @@ export function StockList({
             <Link href={`/stock/nouvelle${query}`} aria-label="Nouvelle pièce" className="lg:hidden size-touch rounded bg-surface shadow-[inset_0_0_0_1.5px_var(--color-ring)] flex items-center justify-center text-text">
               <Icon name="plus" />
             </Link>
-            <Link href={`/stock/nouvelle${query}`} className={`hidden lg:inline-flex ${buttonClass({ variant: "secondary" })}`}>
+            <Link href={`/stock/nouvelle${query}`} className={`max-lg:hidden ${buttonClass({ variant: "secondary" })}`}>
               <Icon name="plus" /> Nouvelle pièce
             </Link>
           </>
