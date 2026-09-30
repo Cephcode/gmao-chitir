@@ -1,10 +1,13 @@
 // Confirmation « Panne envoyée » (M-05c). Récapitulatif de l'intervention créée.
 // L'équipe du restaurant a été notifiée dans l'application par declarer_panne.
+// ?photos_echec=N : N photos n'ont pas pu être envoyées (la panne, elle, est déclarée).
 import { STATUS_BADGE, type InterventionStatus } from "@/lib/intervention-status";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/icons";
+import { Alert } from "@/components/ui/alert";
+import { failedPhotosMessage, readFailedCount } from "@/lib/photos";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -29,7 +32,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export default async function PanneEnvoyeePage(props: PageProps<"/panne/envoyee/[id]">) {
-  const { id } = await props.params;
+  const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
+  const photosMessage = failedPhotosMessage(readFailedCount(searchParams.photos_echec), "declaration");
   const supabase = await createClient();
   const { data } = await supabase
     .from("interventions")
@@ -51,6 +55,21 @@ export default async function PanneEnvoyeePage(props: PageProps<"/panne/envoyee/
           machine sera réparée.
         </p>
       </div>
+      {photosMessage && (
+        <div className="w-full text-left">
+          <Alert
+            variant="warning"
+            icon="camera"
+            action={
+              <Link href={`/interventions/${i.id}`} className="text-orange-text font-bold text-[14px]">
+                Ouvrir la fiche
+              </Link>
+            }
+          >
+            {photosMessage}
+          </Alert>
+        </div>
+      )}
       <Card padded={false} className="w-full px-5 divide-y divide-surface-2 text-left">
         <Row label="Machine">{i.equipments?.name ?? i.equipment_free_text ?? "Non identifiée"}</Row>
         <Row label="Restaurant">{i.restaurants?.short_code ?? ""}</Row>

@@ -4,7 +4,6 @@
 // restaurant (tous les rôles peuvent déclarer) puis, en une transaction : ouvre
 // l'intervention, met la machine en panne, écrit la fiche de vie, notifie l'équipe.
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/session";
 import { canSetStatus, isOpenStatus, type OpenStatus } from "@/lib/intervention-status";
@@ -23,7 +22,9 @@ export type PanneInput = {
 
 export type PanneState = { error: string; field?: "machine" | "type" | "status" } | null;
 
-export async function declarerPanne(input: PanneInput): Promise<PanneState> {
+// Succès : l'identifiant de l'intervention créée. Le formulaire envoie ensuite les photos
+// éventuelles (elles ont besoin de cet identifiant), puis ouvre la confirmation.
+export async function declarerPanne(input: PanneInput): Promise<PanneState | { id: string }> {
   if (!input.equipmentId && !input.freeText.trim()) {
     return { error: "Choisissez la machine, ou décrivez-la si elle n'est pas dans la liste.", field: "machine" };
   }
@@ -53,5 +54,5 @@ export async function declarerPanne(input: PanneInput): Promise<PanneState> {
   }
 
   revalidatePath("/", "layout");
-  redirect(`/panne/envoyee/${data as string}`);
+  return { id: data as string };
 }

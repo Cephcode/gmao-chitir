@@ -5,6 +5,7 @@
 // Ordinateur : fenêtre au-dessus de l'écran assombri, les 3 blocs sur une seule page.
 // L'urgence n'a pas de valeur par défaut : on oblige à répondre.
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { declarerPanne, type PanneInput, type PanneState } from "@/app/(app)/panne/actions";
 import { depuis } from "@/lib/format";
@@ -15,6 +16,8 @@ import { Combobox } from "@/components/ui/combobox";
 import { Field, TextInput, focusHalo } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { OPEN_STATUSES, STATUS_LABELS } from "@/lib/intervention-status";
+import { PhotoPicker, type PendingPhoto } from "@/components/app/photos/photos";
+import { sendPhotos } from "@/lib/photos-browser";
 
 export type Machine = {
   id: string;
@@ -102,6 +105,9 @@ export function DeclareForm({
   const [search, setSearch] = useState("");
   const [result, setResult] = useState<PanneState>(null);
   const [pending, startTransition] = useTransition();
+  const [photos, setPhotos] = useState<PendingPhoto[]>([]); // « avant », envoyées après la déclaration
+  const [sendingPhotos, setSendingPhotos] = useState(false);
+  const router = useRouter();
 
   const set = <K extends keyof PanneInput>(key: K, value: PanneInput[K]) =>
     setV((cur) => ({ ...cur, [key]: value }));
@@ -140,7 +146,18 @@ export function DeclareForm({
     e.preventDefault();
     startTransition(async () => {
       const res = await declarerPanne(v);
-      // En cas de succès, l'action redirige vers la confirmation.
+      if (res && "id" in res) {
+        // Panne déclarée. Les photos suivent ; si certaines échouent, la panne reste
+        // déclarée et la confirmation le signale (?photos_echec=N).
+        let failed = 0;
+        if (photos.length > 0) {
+          setSendingPhotos(true);
+          const restaurantId = machine?.restaurantId ?? v.restaurantId;
+          failed = (await sendPhotos(restaurantId, res.id, "avant", photos.map((p) => p.blob))).failed;
+        }
+        router.push(`/panne/envoyee/${res.id}${failed > 0 ? `?photos_echec=${failed}` : ""}`);
+        return;
+      }
       setResult(res);
       if (res?.field === "machine") setStep(1);
     });
@@ -418,6 +435,13 @@ export function DeclareForm({
                 className="w-full rounded border-[1.5px] border-border-strong bg-surface px-3.5 py-3 text-[16px] text-text outline-0 resize-y placeholder:text-text-muted focus:border-orange focus:shadow-[0_0_0_3px_var(--color-orange-selected)]"
               />
             </Field>
+            <PhotoPicker
+              title="Photos de la panne (facultatif)"
+              photos={photos}
+              setPhotos={setPhotos}
+              disabled={pending}
+              hint="Appareil photo ou galerie. Les photos sont allégées avant l'envoi."
+            />
           </section>
 
           {/* ---------- 3. L'urgence ---------- */}
@@ -499,7 +523,7 @@ export function DeclareForm({
             size="md"
             className={`max-lg:flex-1 max-lg:h-cta ${step === 1 ? "max-lg:hidden" : ""}`}
           >
-            {pending ? "Envoi…" : "Envoyer la déclaration"}
+            {sendingPhotos ? "Envoi des photos…" : pending ? "Envoi…" : "Envoyer la déclaration"}
           </Button>
         </footer>
       </form>
