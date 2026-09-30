@@ -26,8 +26,9 @@ export default async function AppLayout({
         urgences={urgences}
         unread={unread}
       />
-      {/* Marge basse sur mobile : barre du bas (80px) + bouton flottant */}
-      <main className="flex-1 min-w-0 pb-44 lg:pb-0">{children}</main>
+      {/* Marge basse sur mobile : barre du bas (80px) + bouton flottant.
+          Sur ordinateur, marge gauche = largeur du menu latéral fixe (w-64). */}
+      <main className="flex-1 min-w-0 pb-44 lg:pb-0 lg:pl-64">{children}</main>
       <BottomNav />
       <FabPanne />
     </div>

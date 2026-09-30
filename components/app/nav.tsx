@@ -71,7 +71,10 @@ export function Sidebar({
     .join("");
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 shrink-0 h-dvh sticky top-0 bg-sidebar text-sidebar-text p-3 gap-4">
+    // Fixé à gauche (et non sticky) pour ne pas bouger au défilement de la page. Si la
+    // fenêtre est basse (barre de favoris, petit écran), le menu défile de lui-même au lieu
+    // de tasser ses éléments ; overscroll-contain garde ce défilement dans le menu.
+    <aside className="hidden lg:flex flex-col w-64 fixed inset-y-0 left-0 z-30 overflow-y-auto overscroll-contain bg-sidebar text-sidebar-text p-3 gap-4 [&>*]:shrink-0">
       <div className="flex items-center gap-3 px-2 pt-2">
         <Image src="/logo-chitir.png" alt="" width={40} height={40} className="rounded-sm" />
         <div className="font-display font-semibold leading-tight">GMAO Chitir</div>
