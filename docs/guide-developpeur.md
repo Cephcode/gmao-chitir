@@ -3,6 +3,7 @@
 Pour reprendre et modifier le projet seul, sans assistant. Mis à jour le 2026-10-08.
 
 **Les documents, et dans quel ordre les lire :**
+0. `docs/comprendre-le-projet.md` : **à lire en premier si Next.js est nouveau pour vous** (les notions, le trajet d'un clic, modifier et ajouter un module avec un modèle à recopier).
 1. `docs/taches-restantes.md` : **où en est le projet** et **comment faire chaque tâche restante** (commencer par là).
 2. Ce guide : comment l'application fonctionne, où se trouve chaque chose, comment modifier.
 3. `docs/base-de-donnees.md` : toutes les tables, fonctions SQL, droits et migrations.
