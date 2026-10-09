@@ -55,6 +55,8 @@ Fichiers concernés (`git status`) :
 
 ## T1. Commiter et pousser le travail du 06/10
 
+> **Commité le 2026-10-09** sur `staging` (commits `dc908ba` et suivants). Reste : `git push`.
+
 ```bash
 cd ~/Bureau/Projets/gmao/webapp/gmao-chitir
 git checkout staging
@@ -254,6 +256,8 @@ Liste complète : `docs/plan-mise-en-production.md`, étape 7. Les commandes :
 ---
 
 ## T8. Passer aux identifiants du client
+
+> **Choix fait le 2026-10-09** : transfert de la base Supabase dans l'organisation du client, compte propriétaire remis à son e-mail. Marche à suivre complète et à jour : **`docs/remise-client.md`** (avec le script `scripts/remettre-compte.mjs`). La suite de cette section reste comme référence (option B, autres services).
 
 Il y a **quatre comptes** à remettre : Supabase (base, comptes, photos), Vercel (hébergement), Firebase (push), Resend (mails). Plus GitHub pour le code.
 Deux façons de faire. **Le client a déjà des données réelles dans ta base** (CTR4, interventions) : l'option A est donc la plus sûre.

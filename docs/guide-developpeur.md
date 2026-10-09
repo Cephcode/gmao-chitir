@@ -92,6 +92,7 @@ Le dossier est relié aux services par : `supabase/.temp/project-ref` (`supabase
 | `supabase/snippets/` | Requêtes SQL enregistrées depuis le studio local (sans importance) |
 | `tests/` | Tests des règles pures (`node --test`), avec un chargeur qui résout `@/` (`register.mjs`, `alias-hooks.mjs`) |
 | `scripts/vercel-env.sh` | Copie les variables d'environnement vers Vercel |
+| `scripts/remettre-compte.mjs` | Change l'e-mail de connexion d'un compte (connexion et profil) et met un mot de passe temporaire ; sert à la remise au client (`docs/remise-client.md`) |
 | `scripts/verification-production.sql` | Contrôle de santé de la base hébergée en lecture seule (tâche du matin, photos, notifications remises, push, comptes) |
 | `scripts/reperage-donnees.sql` | Requêtes en lecture seule pour voir les données de la base hébergée (avant nettoyage) |
 | `.env.example` | Liste des variables (noms seulement). Les vrais `.env*` sont hors dépôt |
@@ -464,7 +465,8 @@ git push
 
 | Document | Contenu |
 |---|---|
-| `docs/taches-restantes.md` | État au 2026-10-08, tâches restantes et marche à suivre (dont la remise au client) |
+| `docs/taches-restantes.md` | État au 2026-10-08, tâches restantes et marche à suivre |
+| `docs/remise-client.md` | Remise au client pas à pas : production, transfert Supabase, compte propriétaire, mails, Vercel |
 | `docs/base-de-donnees.md` | Tables, types, fonctions SQL, triggers, droits, migrations |
 | `docs/README.md` | Installation, variables, base, tests, notifications, déploiement, rôles et droits |
 | `docs/journal-decisions.md` | Chaque décision datée : quoi, pourquoi, ce qui a été écarté |

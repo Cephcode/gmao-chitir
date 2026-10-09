@@ -11,6 +11,7 @@ Application web de **gestion de la maintenance** des restaurants Chitir Chicken 
 | Je veux… | Lire |
 |---|---|
 | Savoir où en est le projet et ce qu'il reste à faire (dont la remise au client) | [`docs/taches-restantes.md`](docs/taches-restantes.md) |
+| Remettre le projet au client (transfert, compte propriétaire, mails) | [`docs/remise-client.md`](docs/remise-client.md) |
 | Comprendre le code, trouver un fichier, faire une modification | [`docs/guide-developpeur.md`](docs/guide-developpeur.md) |
 | Connaître les tables, fonctions SQL et droits | [`docs/base-de-donnees.md`](docs/base-de-donnees.md) |
 | Installer, configurer, tester, déployer | [`docs/README.md`](docs/README.md) |
