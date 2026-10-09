@@ -1,5 +1,14 @@
 # Plan de mise en production
 
+> **Où en est ce plan (2026-10-08)**
+> - « Risque à lever en premier » : **réglé**. `staging` a été poussé et fusionné dans `main` (pull request n°1, 2026-09-30). La production tourne sur ce code, et le client l'utilise.
+> - Étape 0 : `staging` est sur GitHub ; il reste à tester sur l'adresse de prévisualisation https.
+> - Étapes 1 à 6 (seconde recette par les agents, `docs/recette-2/`) : **pas faites**. Une recette rapide a été faite le 2026-10-06 (résultat dans `docs/taches-restantes.md`, section 1).
+> - Étape 7 : `@vercel/analytics` retiré (fait). Le reste est à faire.
+> - Depuis : retours de la présentation client du 2026-10-06, pas encore commités.
+>
+> L'ordre de travail à jour, avec les commandes, est dans **`docs/taches-restantes.md`**. Ce plan reste la liste de contrôle détaillée.
+
 Objectif : s'assurer que `staging` est assez robuste pour la production, **sans tout refaire**. La première recette (`docs/plan-recette-agents.md`, rapports dans `docs/recette/`) a couvert l'application jusqu'au rapport de conformité (commit `5838cc6`). Depuis, 39 commits, 91 fichiers et 5 migrations ont été ajoutés : les statuts d'intervention, les photos, l'écran Catégories, l'application installable et les correctifs mobiles (`docs/plan-corrections-mobile.md`).
 Cette seconde recette porte donc sur **ce delta**, sur la **non-régression** et sur les **prérequis de production** (configuration, données, sauvegardes).
 

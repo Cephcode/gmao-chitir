@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GMAO Chitir Chicken
 
-## Getting Started
+Application web de **gestion de la maintenance** des restaurants Chitir Chicken : machines, pannes, interventions, entretiens, stock de pièces et alertes (application, push, mail). Pensée d'abord pour le téléphone, installable sur l'écran d'accueil.
 
-First, run the development server:
+- Production : `https://gmao-chitir.vercel.app`
+- Code : Next.js 16 (App Router) sur Vercel ; Supabase (Postgres, Auth, Storage, Edge Function) ; Firebase (push) ; Resend (mails).
+- Tout le texte de l'application, du code et de la documentation est en français.
+
+## Par où commencer
+
+| Je veux… | Lire |
+|---|---|
+| Savoir où en est le projet et ce qu'il reste à faire (dont la remise au client) | [`docs/taches-restantes.md`](docs/taches-restantes.md) |
+| Comprendre le code, trouver un fichier, faire une modification | [`docs/guide-developpeur.md`](docs/guide-developpeur.md) |
+| Connaître les tables, fonctions SQL et droits | [`docs/base-de-donnees.md`](docs/base-de-donnees.md) |
+| Installer, configurer, tester, déployer | [`docs/README.md`](docs/README.md) |
+| Savoir pourquoi une décision a été prise | [`docs/journal-decisions.md`](docs/journal-decisions.md) |
+| Présenter l'application au client | [`docs/guide-presentation-client.md`](docs/guide-presentation-client.md) |
+
+## Démarrage rapide
+
+Prérequis : Node 20 ou plus (24 conseillé), Docker, Supabase CLI, Vercel CLI.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+supabase start                 # base locale dans Docker, toutes les migrations
+bash supabase/tests/run.sh     # 677 tests au 2026-10-06, 0 échec attendu
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+⚠️ `npm run dev` lit `.env.development.local`, qui pointe sur la **base hébergée** (vraies données). Pour travailler sur la base locale : [`docs/guide-developpeur.md`](docs/guide-developpeur.md), section 7.
+Les variables nécessaires sont listées (sans valeurs) dans `.env.example`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Organisation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/                  pages et actions serveur (Next.js)
+components/           composants d'écran (app/) et briques (ui/)
+lib/                  lecture des données, règles, libellés
+supabase/migrations/  toute la base (tables, droits, fonctions, données de départ)
+supabase/functions/   Edge Function d'envoi des notifications
+supabase/tests/       tests SQL (pgTAP) et script run.sh
+tests/                tests des règles pures (node --test)
+scripts/              outils (variables Vercel, repérage des données)
+docs/                 documentation
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Branches : `staging` pour le travail, `main` pour la production (déployée par Vercel à chaque fusion).
