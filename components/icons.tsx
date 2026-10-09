@@ -38,6 +38,10 @@ export const iconPaths = {
   store: "M4 9l1.5-5h13L20 9M4 9h16M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M5 11v9h14v-9M10 20v-5h4v5",
   chevronRight: "M9 6l6 6-6 6",
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
+  // Gobelet avec couvercle et paille : consommables (stock des restaurants).
+  cup: "M5 7h14M6 7l1.5 14h9L18 7M7 7l.5-3h9l.5 3M13 4l2-2",
+  // Deux flèches opposées : transfert entre restaurants.
+  swap: "M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7",
   // Icônes d'équipement (par catégorie)
   flame: "M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .3 2 1.3 3 2.5 3 0-3-1-5 0-8z",
   snow: "M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17M9 4l3 2 3-2M9 20l3-2 3 2",

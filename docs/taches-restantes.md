@@ -50,6 +50,7 @@ Fichiers concernés (`git status`) :
 | T7 | Préparer la production (nettoyage, sauvegarde, réglages) | Haute | 1 à 2 h |
 | T8 | Passer aux identifiants du client | Haute | 1 h (transfert) à une demi-journée (nouveau projet) |
 | T9 | Points reportés, à proposer plus tard | Faible | — |
+| T10 | Livrer le module Consommables (stock des restaurants), branche `feature/stock-consommables` | Demande client | 1 h (livraison) |
 
 ---
 
@@ -387,6 +388,11 @@ Décidés hors du périmètre actuel (`docs/plan-mise-en-production.md`, étape 
 - plus de photos par intervention (plan payant Supabase, Storage au-delà de 1 Go).
 
 Fait depuis la liste du 30/09 : « Nouvelle intervention » sans panne (2026-10-06).
+
+## T10. Livrer le module Consommables
+
+Demande du client du 2026-10-09 : gérer le stock **de chaque restaurant** (emballages et jetables, boissons, matériel en gros). Développé et testé sur la branche `feature/stock-consommables` (801 tests réussis, build réussi, parcours vérifié dans le navigateur).
+Tout est décrit dans `docs/plan-module-consommables.md` : la livraison est la **section 9** (migration `20261009090000_consommables.sql` d'abord, puis fusion). Aucune Edge Function à redéployer. Points à faire valider par le client : section 0 du même document.
 
 ### Surveiller la première semaine
 

@@ -62,7 +62,7 @@ Le dossier est relié aux services par : `supabase/.temp/project-ref` (`supabase
 
 | Dossier ou fichier | Contenu |
 |---|---|
-| `app/(app)/` | Toutes les pages après connexion (le dossier entre parenthèses n'apparaît pas dans l'adresse). `layout.tsx` = garde de session, mot de passe à changer, menu. Un dossier par écran : `equipements/`, `interventions/`, `panne/`, `stock/`, `notifications/`, `admin/` |
+| `app/(app)/` | Toutes les pages après connexion (le dossier entre parenthèses n'apparaît pas dans l'adresse). `layout.tsx` = garde de session, mot de passe à changer, menu. Un dossier par écran : `equipements/`, `interventions/`, `panne/`, `stock/`, `consommables/`, `notifications/`, `admin/` |
 | `app/(app)/**/page.tsx` | Une page : lit les données (fonctions de `lib/`) et affiche les composants |
 | `app/(app)/**/actions.ts` | Actions serveur (`"use server"`) : tout ce qui **écrit** |
 | `app/(app)/interventions/photos-actions.ts` | Enregistrer et retirer les photos (après dépôt dans Storage) |
@@ -112,6 +112,7 @@ Le dossier est relié aux services par : `supabase/.temp/project-ref` (`supabase
 | `interventions.ts` | Interventions : lecture, filtres, types (`KIND_LABELS`), priorités (`TYPE_BADGE`), techniciens (`listTechnicians`), pièces disponibles à la clôture |
 | `intervention-status.ts` | Statuts, libellés, `canSetStatus` |
 | `stock.ts` | Pièces, unités, mouvements, `isLow`, `canEditStock` |
+| `consommables.ts`, `consommables-rules.ts` | Consommables (stock des restaurants) : lectures (`chargerListe`, `getArticle`, mouvements, `canEditConsommables`) ; règles pures testées (familles, unités, opérations, validation, résumé par restaurant, filtres) |
 | `notifications.ts` | Types de notification (`TYPE_STYLE`), réglages « Mes alertes » (`SETTINGS`), groupes par jour, `safeLink` |
 | `photos.ts`, `photos-browser.ts`, `photos-server.ts` | Photos : limites et chemins ; compression et envoi depuis le navigateur ; liens signés côté serveur |
 | `firebase-client.ts`, `push-appareil.ts` | Push : jeton de l'appareil, activation, oubli à la déconnexion |
@@ -140,6 +141,9 @@ Toutes les pages de `app/(app)/` sont réservées aux comptes connectés. « Qui
 | `/stock` | `stock/page.tsx` | `stock-list` | — | Tous |
 | `/stock/[id]` | `stock/[id]/page.tsx` | `part-sheet`, `stock-controls` | `mouvementStock` → `mouvement_stock` | Tous (mouvements : propriétaire, éditeur) |
 | `/stock/nouvelle`, `/stock/[id]/modifier` | `stock/nouvelle/page.tsx`, `…/modifier/page.tsx` | `part-form` | `enregistrerPiece` (direct + `mouvement_stock` pour la quantité de départ) ; `supprimerPiece` | Propriétaire, éditeur |
+| `/consommables` | `consommables/page.tsx` | `consommables/article-list`, `stock/stock-switch` | — | Tous |
+| `/consommables/[id]` | `consommables/[id]/page.tsx` | `article-sheet`, `article-operation` | `operationArticle` → `mouvement_article`, `inventaire_article`, `transferer_article`, `regler_seuil_article` ; `arreterSuivi` → `ne_plus_suivre_article` | Tous (opérations : propriétaire, éditeur du restaurant) |
+| `/consommables/nouveau`, `/consommables/[id]/modifier` | `consommables/nouveau/page.tsx`, `…/modifier/page.tsx` | `article-form` | `enregistrerArticle`, `supprimerArticle` (direct, RLS) | Propriétaire, éditeur (suppression : propriétaire) |
 | `/notifications` | `notifications/page.tsx` | `alert-settings`, `push-toggle` | `ouvrirNotification`, `toutMarquerLu` (colonne `read_at`) | Tous |
 | `/notifications/alertes` | `notifications/alertes/page.tsx` | `alert-settings`, `push-toggle` | `reglerAlerte` (`notification_settings`) ; `enregistrerAppareil`, `oublierAppareil` (`push_tokens`) | Tous |
 | `/admin` | `admin/page.tsx` | — | — (redirige vers `/admin/utilisateurs`) | Propriétaire, éditeur (garde : `admin/layout.tsx`) |
@@ -151,6 +155,7 @@ Toutes les pages de `app/(app)/` sont réservées aux comptes connectés. « Qui
 - `/equipements?q=&restaurant=&categorie=&etat=&entretien=` ;
 - `/interventions?statut=&q=&restaurant=&etat=&nature=&type=&technicien=` (`statut` = onglet `ouvertes`, `terminee` ou `toutes` ; `etat` = statut d'une intervention ouverte, `a_planifier`, `en_cours` ou `en_attente_piece` ; `nature` = type d'intervention ; `type` = priorité) ;
 - `/stock?q=&categorie=&statut=` ;
+- `/consommables?q=&restaurant=CODE&famille=&statut=sous_seuil` ;
 - `/?restaurant=CODE` sur le tableau de bord.
 
 ---
@@ -242,6 +247,8 @@ Pour revenir à zéro : `supabase db reset`.
 | Ajouter un statut d'intervention | 1) Migration seule : `alter type intervention_status add value '…';` ; 2) `lib/intervention-status.ts` (libellés, statuts ouverts) ; 3) `components/ui/status-badge.tsx` (couleur, icône) ; 4) vérifier `changer_statut_intervention` et les tests `08_statuts.sql`. |
 | Ajouter un type d'intervention (comme « Contrôle ») | 1) Migration seule : `alter type intervention_kind add value '…';` ; 2) `KIND_LABELS` et `KINDS` dans `lib/interventions.ts` ; 3) le choix dans `components/app/interventions/new-intervention-form.tsx` ; 4) l'effet sur la machine dans `creer_intervention` (seul `correctif` la met en panne). |
 | Ajouter une fréquence d'entretien | Enum `maintenance_frequency` (migration seule), puis la fonction SQL `next_due_date` (calcul de l'échéance), puis `FREQUENCY_LABELS` dans `lib/equipements.ts` et les boutons de `equipment-form.tsx`. |
+| Ajouter une famille ou une unité de consommable | Famille : migration seule `alter type article_famille add value '…';`, puis `FAMILLES` et `FAMILLE_LABELS` dans `lib/consommables-rules.ts`. Unité : migration qui remplace la contrainte `articles_unit_check`, puis `UNITES` dans le même fichier. |
+| Laisser le lecteur saisir les consommations | Fonction `consommable_controle` (rôles acceptés) dans une nouvelle migration, en limitant au besoin aux raisons `consommation` et `perte` dans `mouvement_article` ; puis `canEditConsommables` (`lib/consommables.ts`) et les tests `13_consommables.sql`. |
 | Ajouter une icône | `components/icons.tsx` : un nom et un tracé SVG 24×24 à trait. Pour qu'elle soit proposée aux catégories : la liste dans `lib/categories-rules.ts`. |
 | Changer l'icône d'une catégorie | À l'écran : Administration, puis Catégories. Icône par défaut selon le code : `lib/equipment-icon.ts`. |
 | Ajouter un champ à une machine | 1) Migration : `alter table equipments add column …`, puis redéfinir `enregistrer_equipement` avec le nouveau paramètre (supprimer l'ancienne signature avec `drop function`, remettre les `grant`) ; 2) `lib/equipements.ts` (type, lecture) ; 3) `components/app/equipements/equipment-form.tsx` et `app/(app)/equipements/actions.ts` ; 4) l'afficher dans `equipment-sheet.tsx`. |
@@ -307,7 +314,7 @@ Inventaire complet (tables, fonctions et leur version en vigueur, droits) : `doc
 
 ```bash
 supabase start                          # base locale (Docker)
-bash supabase/tests/run.sh              # tout (677 tests au 2026-10-06)
+bash supabase/tests/run.sh              # tout (801 tests au 2026-10-09)
 bash supabase/tests/run.sh 08_statuts   # un seul fichier
 ```
 
@@ -325,6 +332,7 @@ bash supabase/tests/run.sh 08_statuts   # un seul fichier
 | `10_photos.sql` | Photos : RLS, bucket, limite, ajouts simultanés |
 | `11_comptes.sql` | Suppression d'un compte qui en a créé d'autres |
 | `12_retours_client.sql` | Retours du 2026-10-06 : nouvelle intervention, attribution, fréquences, noms uniques, date |
+| `13_consommables.sql` | Consommables : livraison, consommation, perte, inventaire, transfert, seuil et alertes par restaurant, droits rôle × restaurant (101 tests) |
 | `concurrence.sh` | Clôtures et mouvements simultanés |
 | `tests/*.test.ts` | Règles pures : administration, entretien, catégories, photos (`node --test`) |
 
@@ -466,6 +474,7 @@ git push
 | Document | Contenu |
 |---|---|
 | `docs/taches-restantes.md` | État au 2026-10-08, tâches restantes et marche à suivre |
+| `docs/plan-module-consommables.md` | Plan d'implémentation et de livraison du module Consommables (stock des restaurants) |
 | `docs/remise-client.md` | Remise au client pas à pas : production, transfert Supabase, compte propriétaire, mails, Vercel |
 | `docs/base-de-donnees.md` | Tables, types, fonctions SQL, triggers, droits, migrations |
 | `docs/README.md` | Installation, variables, base, tests, notifications, déploiement, rôles et droits |

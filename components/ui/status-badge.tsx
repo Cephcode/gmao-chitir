@@ -40,6 +40,8 @@ export const statuses = {
   // Stock
   suffisant: { label: "Suffisant", icon: "check", family: "success" },
   sousLeSeuil: { label: "Sous le seuil", icon: "down", family: "warning" },
+  // Consommables : article pas (ou plus) suivi dans le restaurant
+  nonSuivi: { label: "Non suivi", icon: "minus", family: "neutral" },
 } satisfies Record<string, { label: string; icon: IconName; family: Family }>;
 
 export type StatusKey = keyof typeof statuses;

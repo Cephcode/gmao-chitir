@@ -8,6 +8,7 @@ import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { UrlFilters } from "@/components/app/url-filters";
+import { StockSwitch } from "@/components/app/stock/stock-switch";
 
 export function StockList({
   rows,
@@ -60,6 +61,8 @@ export function StockList({
           )}
         </Link>
       </header>
+
+      <StockSwitch current="pieces" />
 
       {/* Mobile : onglets Toutes / Sous le seuil */}
       <nav aria-label="Filtre du stock" className="lg:hidden grid grid-cols-2 p-1 rounded bg-surface-2">

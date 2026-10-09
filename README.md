@@ -1,6 +1,6 @@
 # GMAO Chitir Chicken
 
-Application web de **gestion de la maintenance** des restaurants Chitir Chicken : machines, pannes, interventions, entretiens, stock de pièces et alertes (application, push, mail). Pensée d'abord pour le téléphone, installable sur l'écran d'accueil.
+Application web de **gestion de la maintenance** des restaurants Chitir Chicken : machines, pannes, interventions, entretiens, stock de pièces, stock des restaurants (consommables) et alertes (application, push, mail). Pensée d'abord pour le téléphone, installable sur l'écran d'accueil.
 
 - Production : `https://gmao-chitir.vercel.app`
 - Code : Next.js 16 (App Router) sur Vercel ; Supabase (Postgres, Auth, Storage, Edge Function) ; Firebase (push) ; Resend (mails).
@@ -25,7 +25,7 @@ Prérequis : Node 20 ou plus (24 conseillé), Docker, Supabase CLI, Vercel CLI.
 ```bash
 npm install
 supabase start                 # base locale dans Docker, toutes les migrations
-bash supabase/tests/run.sh     # 677 tests au 2026-10-06, 0 échec attendu
+bash supabase/tests/run.sh     # 801 tests au 2026-10-09, 0 échec attendu
 npm run dev                    # http://localhost:3000
 ```
 

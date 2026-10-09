@@ -1,5 +1,5 @@
 // Tableau de bord global (M-02 / O-02).
-// 4 indicateurs, « À traiter en priorité » (urgences, pannes, retards, stock bas),
+// 4 indicateurs, « À traiter en priorité » (urgences, pannes, retards, stock bas, consommables bas),
 // synthèse par restaurant. Sur ordinateur en plus : entretiens des 7 jours, stock bas.
 // Toutes les lectures passent par les RLS : chacun ne voit que ses restaurants.
 import Image from "next/image";
@@ -9,6 +9,7 @@ import { getNavCounts, getProfile, ROLE_LABELS } from "@/lib/session";
 import { aujourdhui, dateCourte, depuis, plusJours } from "@/lib/format";
 import { type CategoryRef, categoryIcon } from "@/lib/equipment-icon";
 import { canAccessAdmin } from "@/lib/admin";
+import { estSousSeuil, uniteLabel } from "@/lib/consommables-rules";
 import { Icon, type IconName } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusKey } from "@/components/ui/status-badge";
@@ -41,6 +42,13 @@ type Plan = {
   equipments: { name: string; restaurant_id: string; categories: CategoryRef } | null;
 };
 type Part = { id: string; name: string; quantity: number; min_threshold: number };
+type ArticleStock = {
+  article_id: string;
+  restaurant_id: string;
+  quantity: number;
+  min_threshold: number;
+  articles: { name: string; unit: string } | null;
+};
 
 type PriorityItem = {
   key: string;
@@ -66,7 +74,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
   const today = aujourdhui();
   const in7days = plusJours(today, 7);
 
-  const [restaurantsRes, equipmentsRes, interventionsRes, plansRes, partsRes] = await Promise.all([
+  const [restaurantsRes, equipmentsRes, interventionsRes, plansRes, partsRes, articleStocksRes] = await Promise.all([
     supabase.from("restaurants").select("id, name, short_code").order("short_code"),
     supabase.from("equipments").select("id, state, restaurant_id"),
     supabase
@@ -83,6 +91,8 @@ export default async function TableauDeBord(props: PageProps<"/">) {
       .lte("next_due_at", in7days)
       .order("next_due_at"),
     supabase.from("parts").select("id, name, quantity, min_threshold"),
+    // Consommables : lignes des restaurants accessibles (RLS) ; seuil comparé ci-dessous.
+    supabase.from("article_stocks").select("article_id, restaurant_id, quantity, min_threshold, articles(name, unit)"),
   ]);
 
   const restaurants = (restaurantsRes.data ?? []) as Restaurant[];
@@ -104,12 +114,15 @@ export default async function TableauDeBord(props: PageProps<"/">) {
   const overdue = plans.filter((p) => p.next_due_at < today);
   const upcoming = plans.filter((p) => p.next_due_at >= today);
   const lowParts = ((partsRes.data ?? []) as Part[]).filter((p) => p.quantity < p.min_threshold);
+  const lowArticles = ((articleStocksRes.data ?? []) as unknown as ArticleStock[]).filter(
+    (s) => inScope(s.restaurant_id) && estSousSeuil(s),
+  );
 
   const urgences = interventions.filter((i) => i.type === "urgence");
   const pannes = equipments.filter((e) => e.state === "en_panne");
 
   // « À traiter en priorité » : urgences, puis autres interventions ouvertes,
-  // puis entretiens en retard, puis stock bas.
+  // puis entretiens en retard, puis stock bas (pièces, puis consommables).
   const interventionItem = (i: OpenIntervention): PriorityItem => ({
     key: `i-${i.id}`,
     href: `/interventions/${i.id}`,
@@ -144,6 +157,17 @@ export default async function TableauDeBord(props: PageProps<"/">) {
       sub: `${p.quantity} restant${p.quantity > 1 ? "s" : ""} · seuil ${p.min_threshold}`,
       status: "sousLeSeuil" as StatusKey,
     })),
+    ...lowArticles.map((s) => {
+      const code = codeOf.get(s.restaurant_id) ?? "";
+      return {
+        key: `c-${s.article_id}-${s.restaurant_id}`,
+        href: `/consommables/${s.article_id}?restaurant=${code}`,
+        icon: "cup" as IconName,
+        name: s.articles?.name ?? "Consommable",
+        sub: `${code} · ${s.quantity} ${uniteLabel(s.articles?.unit ?? "", s.quantity)} · seuil ${s.min_threshold}`,
+        status: "sousLeSeuil" as StatusKey,
+      };
+    }),
   ];
   const PRIORITY_MAX = 6;
 
