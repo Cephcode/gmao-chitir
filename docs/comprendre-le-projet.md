@@ -4,6 +4,8 @@
 
 **Comment le lire ?** Dans l'ordre la première fois (une heure environ). Ensuite, comme un aide-mémoire : la [section 9](#9-aide-mémoire--je-veux-) répond à « je veux faire X, je touche à quoi ? ».
 
+**Tu débutes complètement ?** Suis plutôt la formation complète, `docs/formation/00-LISEZ-MOI.md` : elle part de zéro (web, JavaScript, React, Next.js) et contient des exercices. Ce document en est le résumé.
+
 Les autres documents vont plus loin sur un sujet précis :
 - `docs/guide-developpeur.md` : la carte détaillée (chaque écran, chaque fichier, pièges déjà rencontrés) ;
 - `docs/base-de-donnees.md` : toutes les tables, fonctions et droits ;

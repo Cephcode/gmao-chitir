@@ -3,7 +3,7 @@
 Pour reprendre et modifier le projet seul, sans assistant. Mis à jour le 2026-10-08.
 
 **Les documents, et dans quel ordre les lire :**
-0. `docs/comprendre-le-projet.md` : **à lire en premier si Next.js est nouveau pour vous** (les notions, le trajet d'un clic, modifier et ajouter un module avec un modèle à recopier).
+0. `docs/formation/` : **la formation complète, à suivre en premier si le web ou Next.js sont nouveaux pour vous** (12 chapitres, exercices). `docs/comprendre-le-projet.md` en est le résumé (les notions, le trajet d'un clic, modifier et ajouter un module avec un modèle à recopier).
 1. `docs/taches-restantes.md` : **où en est le projet** et **comment faire chaque tâche restante** (commencer par là).
 2. Ce guide : comment l'application fonctionne, où se trouve chaque chose, comment modifier.
 3. `docs/base-de-donnees.md` : toutes les tables, fonctions SQL, droits et migrations.
@@ -205,6 +205,8 @@ Ordre à respecter pour une livraison qui touche la base : **migrations, puis Ed
 
 ## 7. Travailler sur la base locale (sans toucher aux vraies données)
 
+**Raccourci : `bash scripts/dev-local.sh`** fait exactement ce qui suit (et refuse de démarrer si la base locale est arrêtée).
+
 Next ne remplace pas une variable déjà présente dans l'environnement par celle d'un fichier `.env`. On peut donc lancer l'application sur la base locale sans modifier `.env.development.local` :
 
 ```bash
@@ -216,7 +218,7 @@ SUPABASE_SECRET_KEY="$SECRET_KEY" \
 npm run dev
 ```
 
-La base locale n'a **aucun compte** au départ. Créer un propriétaire avec le script de `docs/taches-restantes.md` (T8), avec les mêmes variables :
+La base locale n'a **aucun compte** au départ. Créer un propriétaire avec `scripts/creer-proprietaire.mjs` (le script décrit dans `docs/taches-restantes.md`, T8), avec les mêmes variables :
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" \

@@ -10,7 +10,8 @@ Application web de **gestion de la maintenance** des restaurants Chitir Chicken 
 
 | Je veux… | Lire |
 |---|---|
-| **Débuter : comprendre comment tout marche (sans connaître Next.js), modifier ou ajouter un module** | [`docs/comprendre-le-projet.md`](docs/comprendre-le-projet.md) |
+| **Apprendre le projet de zéro** (web, React, Next.js, architecture, qui fait quoi, ajouter ses fonctionnalités) : formation en 12 chapitres | [`docs/formation/00-LISEZ-MOI.md`](docs/formation/00-LISEZ-MOI.md) |
+| Le résumé de cette formation en une page (aide-mémoire) | [`docs/comprendre-le-projet.md`](docs/comprendre-le-projet.md) |
 | Savoir où en est le projet et ce qu'il reste à faire (dont la remise au client) | [`docs/taches-restantes.md`](docs/taches-restantes.md) |
 | Remettre le projet au client (transfert, compte propriétaire, mails) | [`docs/remise-client.md`](docs/remise-client.md) |
 | Comprendre le code, trouver un fichier, faire une modification | [`docs/guide-developpeur.md`](docs/guide-developpeur.md) |
@@ -27,10 +28,10 @@ Prérequis : Node 20 ou plus (24 conseillé), Docker, Supabase CLI, Vercel CLI.
 npm install
 supabase start                 # base locale dans Docker, toutes les migrations
 bash supabase/tests/run.sh     # 801 tests au 2026-10-09, 0 échec attendu
-npm run dev                    # http://localhost:3000
+bash scripts/dev-local.sh      # http://localhost:3000, sur la base LOCALE
 ```
 
-⚠️ `npm run dev` lit `.env.development.local`, qui pointe sur la **base hébergée** (vraies données). Pour travailler sur la base locale : [`docs/guide-developpeur.md`](docs/guide-developpeur.md), section 7.
+⚠️ `npm run dev` seul lit `.env.development.local`, qui pointe sur la **base hébergée** (vraies données). `scripts/dev-local.sh` force la base locale. Premier compte local : `scripts/creer-proprietaire.mjs` ([`docs/formation/01-installer-son-poste.md`](docs/formation/01-installer-son-poste.md)).
 Les variables nécessaires sont listées (sans valeurs) dans `.env.example`.
 
 ## Organisation
