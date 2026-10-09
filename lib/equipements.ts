@@ -6,7 +6,7 @@ import { aujourdhui } from "@/lib/format";
 import type { StatusKey } from "@/components/ui/status-badge";
 
 export type EquipmentState = "operationnel" | "en_panne" | "en_maintenance" | "hors_service";
-export type Frequency = "mensuel" | "trimestriel" | "semestriel" | "annuel";
+export type Frequency = "journalier" | "hebdomadaire" | "mensuel" | "trimestriel" | "semestriel" | "annuel";
 
 export type Plan = {
   task: string | null;
@@ -44,6 +44,8 @@ export const STATE_LABELS: Record<EquipmentState, string> = {
 };
 
 export const FREQUENCY_LABELS: Record<Frequency, string> = {
+  journalier: "Tous les jours",
+  hebdomadaire: "Toutes les semaines",
   mensuel: "Tous les mois",
   trimestriel: "Tous les 3 mois",
   semestriel: "Tous les 6 mois",

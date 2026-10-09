@@ -2,16 +2,31 @@
 // Toutes les lectures passent par les RLS (chacun ne voit que ses restaurants).
 // Filtres appliqués en mémoire côté serveur (volume faible).
 import { createClient } from "@/lib/supabase/server";
-import type { Role } from "@/lib/session";
+import { nomPersonne } from "@/lib/format";
+import { ROLE_LABELS, type Role } from "@/lib/session";
+import type { ComboOption } from "@/components/ui/combobox";
 import type { StatusKey } from "@/components/ui/status-badge";
 import type { EquipmentState } from "@/lib/equipements";
 import { isOpen, isOpenStatus, type InterventionStatus, type OpenStatus } from "@/lib/intervention-status";
 
 export type InterventionType = "normal" | "urgence" | "alerte";
+// Type d'intervention (colonne kind) : réparation d'une panne, entretien, contrôle, amélioration.
+export type InterventionKind = "correctif" | "preventif" | "controle" | "amelioration";
+
+export const KIND_LABELS: Record<InterventionKind, string> = {
+  correctif: "Réparation",
+  preventif: "Entretien préventif",
+  controle: "Contrôle",
+  amelioration: "Installation ou amélioration",
+};
+export const KINDS = Object.keys(KIND_LABELS) as InterventionKind[];
+export const isKind = (v: unknown): v is InterventionKind =>
+  typeof v === "string" && (KINDS as string[]).includes(v);
 
 export type InterventionRow = {
   id: string;
   type: InterventionType;
+  kind: InterventionKind | null; // null : anciennes pannes, traitées comme réparation
   status: InterventionStatus;
   symptoms: string[];
   description: string | null;
@@ -23,9 +38,9 @@ export type InterventionRow = {
   equipment_free_text: string | null;
   restaurant: { id: string; short_code: string };
   equipment: { id: string; name: string; code: string; categories: { code: string } | null } | null;
-  reporter: { first_name: string | null } | null;
-  assignee: { id: string; first_name: string | null } | null;
-  closer: { first_name: string | null } | null;
+  reporter: { first_name: string | null; email: string | null } | null;
+  assignee: { id: string; first_name: string | null; email: string | null } | null;
+  closer: { first_name: string | null; email: string | null } | null;
 };
 
 export const TYPE_BADGE: Record<InterventionType, StatusKey> = {
@@ -44,16 +59,21 @@ export const TYPE_GROUPS: { type: InterventionType; label: string }[] = [
 export const machineName = (i: InterventionRow) =>
   i.equipment?.name ?? i.equipment_free_text ?? "Machine non identifiée";
 
-// Résumé du problème : description, sinon symptômes.
+export const kindOf = (i: Pick<InterventionRow, "kind">): InterventionKind => i.kind ?? "correctif";
+
+// Résumé du problème : description, sinon symptômes, sinon le type.
 export const problem = (i: InterventionRow) =>
-  i.description || i.symptoms.join(", ") || "Panne déclarée";
+  i.description ||
+  i.symptoms.join(", ") ||
+  (kindOf(i) === "correctif" ? "Panne déclarée" : KIND_LABELS[kindOf(i)]);
 
 // Onglet « statut » : ouvertes (tout sauf terminée, par défaut), terminées ou toutes.
 // Puce « etat » : un statut ouvert précis (À planifier, En cours, En attente de pièce).
 export type Filters = {
   statut: "ouvertes" | "terminee" | "toutes";
   etat: OpenStatus | "";
-  type: string;
+  type: string; // priorité : urgence, normal, alerte
+  nature: InterventionKind | "";
   restaurant: string; // short_code
   technicien: string; // id utilisateur ou « aucun »
   q: string;
@@ -68,6 +88,7 @@ export function readFilters(sp: Record<string, string | string[] | undefined>): 
     // La puce « etat » ne concerne que les interventions ouvertes.
     etat: statut !== "terminee" && isOpenStatus(get("etat")) ? (get("etat") as OpenStatus) : "",
     type: get("type"),
+    nature: isKind(get("nature")) ? (get("nature") as InterventionKind) : "",
     restaurant: get("restaurant"),
     technicien: get("technicien"),
     q: get("q").trim(),
@@ -93,6 +114,7 @@ export function applyFilters(rows: InterventionRow[], f: Filters): InterventionR
   return rows.filter((i) => {
     if (f.etat && i.status !== f.etat) return false;
     if (f.type && i.type !== f.type) return false;
+    if (f.nature && kindOf(i) !== f.nature) return false;
     if (f.restaurant && i.restaurant.short_code !== f.restaurant) return false;
     if (f.technicien === "aucun" ? i.assignee : f.technicien && i.assignee?.id !== f.technicien)
       return false;
@@ -105,12 +127,12 @@ export function applyFilters(rows: InterventionRow[], f: Filters): InterventionR
 const TYPE_ORDER: Record<InterventionType, number> = { urgence: 0, normal: 1, alerte: 2 };
 
 const SELECT =
-  "id, type, status, symptoms, description, reported_at, closed_at, work_done, state_after, " +
+  "id, type, kind, status, symptoms, description, reported_at, closed_at, work_done, state_after, " +
   "equipment_id, equipment_free_text, restaurant:restaurants(id, short_code), " +
   "equipment:equipments(id, name, code, categories(code)), " +
-  "reporter:users!interventions_reported_by_fkey(first_name), " +
-  "assignee:users!interventions_assigned_to_fkey(id, first_name), " +
-  "closer:users!interventions_closed_by_fkey(first_name)";
+  "reporter:users!interventions_reported_by_fkey(first_name, email), " +
+  "assignee:users!interventions_assigned_to_fkey(id, first_name, email), " +
+  "closer:users!interventions_closed_by_fkey(first_name, email)";
 
 // Ouvertes : urgences d'abord, puis plus récentes. Terminées : dernières clôturées d'abord.
 export async function listInterventions(): Promise<InterventionRow[]> {
@@ -130,30 +152,51 @@ export async function getIntervention(id: string): Promise<InterventionRow | nul
   return (data as unknown as InterventionRow | null) ?? null;
 }
 
-export type Technician = { id: string; first_name: string | null; role: Role };
+export type Technician = { id: string; first_name: string | null; email: string | null; role: Role };
+
+type RawTechnician = Technician & { all_restaurants: boolean; user_restaurants: { restaurant_id: string }[] };
+
+// Propriétaires, éditeurs et commentateurs visibles, techniciens d'abord puis par prénom.
+async function fetchTechnicians(): Promise<RawTechnician[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("users")
+    .select("id, first_name, email, role, all_restaurants, user_restaurants(restaurant_id)")
+    .in("role", ["proprietaire", "editeur", "commentateur"]);
+  const order: Record<string, number> = { commentateur: 0, editeur: 1, proprietaire: 2 };
+  return ((data ?? []) as RawTechnician[]).sort(
+    (a, b) => order[a.role] - order[b.role] || nomPersonne(a).localeCompare(nomPersonne(b), "fr"),
+  );
+}
+
+const worksOn = (u: RawTechnician, restaurantId: string) =>
+  u.all_restaurants || u.user_restaurants.some((ur) => ur.restaurant_id === restaurantId);
+const toTechnician = ({ id, first_name, email, role }: RawTechnician): Technician => ({ id, first_name, email, role });
 
 // Personnes pouvant intervenir sur un restaurant : propriétaire, éditeur, commentateur
 // (technicien) ayant accès à ce restaurant. Sans restaurant : toutes celles visibles.
 export async function listTechnicians(restaurantId?: string): Promise<Technician[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("users")
-    .select("id, first_name, role, all_restaurants, user_restaurants(restaurant_id)")
-    .in("role", ["proprietaire", "editeur", "commentateur"]);
-  type Raw = Technician & { all_restaurants: boolean; user_restaurants: { restaurant_id: string }[] };
-  const order: Record<string, number> = { commentateur: 0, editeur: 1, proprietaire: 2 };
-  return ((data ?? []) as Raw[])
-    .filter(
-      (u) =>
-        !restaurantId ||
-        u.all_restaurants ||
-        u.user_restaurants.some((ur) => ur.restaurant_id === restaurantId),
-    )
-    .map(({ id, first_name, role }) => ({ id, first_name, role }))
-    .sort(
-      (a, b) =>
-        order[a.role] - order[b.role] || (a.first_name ?? "").localeCompare(b.first_name ?? "", "fr"),
-    );
+  return (await fetchTechnicians())
+    .filter((u) => !restaurantId || worksOn(u, restaurantId))
+    .map(toTechnician);
+}
+
+// Options du choix du technicien : prénom (sinon e-mail), rôle à droite, e-mail en
+// seconde ligne (cherchable) s'il n'est pas déjà le libellé.
+export const technicianOptions = (technicians: Technician[]): ComboOption[] =>
+  technicians.map((t) => ({
+    value: t.id,
+    label: nomPersonne(t),
+    hint: ROLE_LABELS[t.role],
+    sub: t.email && t.email !== nomPersonne(t) ? t.email : undefined,
+  }));
+
+// Même liste pour plusieurs restaurants, en une requête (formulaire de création).
+export async function listTechniciansByRestaurant(restaurantIds: string[]) {
+  const all = await fetchTechnicians();
+  return Object.fromEntries(
+    restaurantIds.map((rid) => [rid, all.filter((u) => worksOn(u, rid)).map(toTechnician)]),
+  ) as Record<string, Technician[]>;
 }
 
 export type StockPart = {

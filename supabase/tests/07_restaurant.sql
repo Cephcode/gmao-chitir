@@ -25,7 +25,10 @@ select set_eq($$ select code from equipments where restaurant_id = (select v fro
 select is((select count(*)::int from equipments where restaurant_id = (select v from ctx) and state <> 'operationnel'), 0,
           'copie : toutes les machines démarrent opérationnelles (source en panne / hors service)');
 select is((select count(*)::int from equipments where restaurant_id = (select v from ctx)
-           and (serial_number is not null or installed_at is not null)), 0, 'copie : pas de n° de série ni de date d''installation');
+           and serial_number is not null), 0, 'copie : pas de n° de série');
+-- Retours client (2026-10-06) : sans date connue, date d'installation = jour de l'ajout.
+select is((select count(*)::int from equipments where restaurant_id = (select v from ctx)
+           and installed_at is distinct from current_date), 0, 'copie : date d''installation = aujourd''hui');
 select is((select name || '|' || coalesce(model, '') from equipments where restaurant_id = (select v from ctx) and code = 'TSTC-FRI-01'),
           'Friteuse test|F2P', 'copie : nom et modèle repris');
 select is((select frequency || '|' || task || '|' || coalesce(last_done_at::text, '-') || '|' || next_due_at

@@ -4,7 +4,7 @@
 // 1. Réserve la notification (delivered_at) en une instruction : une seule remise, et un id
 //    inconnu ou déjà envoyé ne fait rien (l'appel n'a donc pas besoin de secret).
 // 2. Push Firebase (API HTTP v1) vers tous les appareils du destinataire ; jetons expirés supprimés.
-// 3. Mail Resend pour les urgences et les pannes. Mode test tant que le domaine n'est pas
+// 3. Mail Resend pour les urgences, les pannes et les attributions au technicien. Mode test tant que le domaine n'est pas
 //    vérifié : si RESEND_TEST_RECIPIENT est défini, tous les mails partent vers cette adresse,
 //    avec le vrai destinataire indiqué dans le mail.
 // Expéditeur : RESEND_FROM_PRODUCTION (domaine du client) s'il est défini, sinon
@@ -30,7 +30,7 @@ const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPAB
   auth: { persistSession: false },
 });
 const APP_URL = (Deno.env.get("APP_URL") ?? "").replace(/\/$/, "");
-const EMAIL_TYPES = new Set(["urgence", "panne"]);
+const EMAIL_TYPES = new Set(["urgence", "panne", "attribution"]);
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Méthode non autorisée", { status: 405 });

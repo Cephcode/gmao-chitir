@@ -2,6 +2,7 @@
 // Sur ordinateur, le formulaire s'ouvre en panneau au-dessus de la liste.
 import { redirect } from "next/navigation";
 import { getNavCounts, getProfile } from "@/lib/session";
+import { aujourdhui } from "@/lib/format";
 import {
   applyFilters,
   canEditEquipments,
@@ -53,7 +54,8 @@ export default async function NouvelEquipementPage(props: PageProps<"/equipement
           brand: null,
           model: "",
           serialNumber: "",
-          installedAt: "",
+          // Date réelle souvent inconnue (restaurants déjà ouverts) : date du jour par défaut.
+          installedAt: aujourdhui(),
           frequency: null,
           task: "",
         }}

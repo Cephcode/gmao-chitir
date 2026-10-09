@@ -6,14 +6,28 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { Frequency } from "@/lib/equipements";
 
 export type ActionState = { ok: true; message: string } | { ok: false; error: string } | null;
+
+// Nom en double dans un restaurant (equipments_nom_restaurant_unique), et non code en double.
+const nomEnDouble = (error: { message: string }) =>
+  error.message.startsWith("Une machine") || error.message.includes("equipments_nom_restaurant_unique");
 
 // Messages lisibles pour les erreurs Postgres attendues. 42501 et 22023 portent déjà
 // un message en français écrit dans la fonction SQL.
 function messageErreur(error: { code?: string; message: string }, defaut: string) {
   if (error.code === "42501" || error.code === "22023" || error.code === "P0002") return error.message;
-  if (error.code === "23505") return "Ce code est déjà utilisé par un autre équipement.";
+  if (error.code === "23505") {
+    // Nom déjà pris dans ce restaurant : message SQL en français (trigger), ou violation
+    // de l'index lors d'un enregistrement simultané.
+    if (nomEnDouble(error)) {
+      return error.message.startsWith("Une machine")
+        ? error.message
+        : "Une machine porte déjà ce nom dans ce restaurant. Donnez un autre nom.";
+    }
+    return "Ce code est déjà utilisé par un autre équipement.";
+  }
   return defaut;
 }
 
@@ -57,7 +71,7 @@ export type EquipmentInput = {
   model: string;
   serialNumber: string;
   installedAt: string; // AAAA-MM-JJ ou ""
-  frequency: "mensuel" | "trimestriel" | "semestriel" | "annuel" | null;
+  frequency: Frequency | null;
   task: string;
 };
 
@@ -87,7 +101,7 @@ export async function enregistrerEquipement(input: EquipmentInput): Promise<Save
   if (error) {
     return {
       error: messageErreur(error, "L'équipement n'a pas pu être enregistré. Réessayez."),
-      field: error.code === "23505" ? "code" : undefined,
+      field: error.code === "23505" ? (nomEnDouble(error) ? "name" : "code") : undefined,
     };
   }
 

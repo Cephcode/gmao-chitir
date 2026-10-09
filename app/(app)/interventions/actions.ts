@@ -7,10 +7,12 @@
 //   (clôture, pièces et stock, état de la machine, fiche de vie, notifications).
 // - changerStatutIntervention : fonction SQL changer_statut_intervention (statut ouvert
 //   seulement, fiche de vie, notification du déclarant). « Terminée » = clôture.
+// - creerIntervention : fonction SQL creer_intervention (tout type d'intervention :
+//   réparation, entretien préventif, contrôle, amélioration). Propriétaire, éditeur, commentateur.
 // Le technicien choisi est revérifié ici : il doit avoir accès au restaurant.
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getIntervention, listTechnicians } from "@/lib/interventions";
+import { getIntervention, isKind, listTechnicians, type InterventionKind } from "@/lib/interventions";
 import { getProfile } from "@/lib/session";
 import { STATUS_LABELS, canSetStatus, isOpen, isOpenStatus, type OpenStatus } from "@/lib/intervention-status";
 import type { EquipmentState } from "@/lib/equipements";
@@ -121,4 +123,57 @@ export async function changerStatutIntervention(input: { id: string; statut: Ope
 
   revalidatePath("/", "layout");
   return { ok: true, message: `Statut : ${STATUS_LABELS[input.statut]}.` };
+}
+
+export type NewInterventionInput = {
+  kind: InterventionKind | null;
+  equipmentId: string | null; // null = machine hors liste (texte libre)
+  restaurantId: string;
+  freeText: string;
+  description: string;
+  urgent: boolean;
+  status: OpenStatus;
+  assignedTo: string | null;
+};
+
+export type NewInterventionState = {
+  error: string;
+  field?: "kind" | "machine" | "description";
+} | null;
+
+// Succès : l'identifiant de l'intervention créée (le formulaire ouvre sa fiche).
+export async function creerIntervention(
+  input: NewInterventionInput,
+): Promise<NewInterventionState | { id: string }> {
+  if (!isKind(input.kind)) return { error: "Choisissez le type d'intervention.", field: "kind" };
+  if (!input.equipmentId && !input.freeText.trim()) {
+    return { error: "Choisissez la machine, ou décrivez-la si elle n'est pas dans la liste.", field: "machine" };
+  }
+  if (!input.description.trim()) return { error: "Décrivez ce qu'il faut faire.", field: "description" };
+  if (!isOpenStatus(input.status)) return { error: "Choisissez le statut de départ." };
+
+  const profile = await getProfile();
+  if (!canSetStatus(profile?.role)) {
+    return { error: "Votre rôle ne permet pas de créer une intervention. Utilisez « Déclarer une panne »." };
+  }
+  // Rôle, accès au restaurant et technicien sont revérifiés par creer_intervention.
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("creer_intervention", {
+    p_kind: input.kind,
+    p_description: input.description.trim(),
+    p_equipment_id: input.equipmentId,
+    p_restaurant_id: input.equipmentId ? null : input.restaurantId,
+    p_equipment_free_text: input.equipmentId ? null : input.freeText.trim(),
+    p_type: input.urgent ? "urgence" : "normal",
+    p_status: input.status,
+    p_assigned_to: input.assignedTo,
+  });
+  if (error) {
+    // 42501 (droits, technicien), P0002 (machine), 22004 et 22023 (saisie) : messages SQL en français.
+    const known = ["42501", "P0002", "22004", "22023"].includes(error.code ?? "");
+    return { error: known ? error.message : "L'intervention n'a pas pu être créée. Réessayez." };
+  }
+
+  revalidatePath("/", "layout");
+  return { id: data as string };
 }

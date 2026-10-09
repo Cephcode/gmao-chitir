@@ -30,3 +30,8 @@ export function plusJours(date: string, n: number): string {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+// Nom d'une personne : prénom, sinon e-mail (comptes créés sans prénom), pour la
+// reconnaître parmi plusieurs utilisateurs.
+export const nomPersonne = (u: { first_name: string | null; email?: string | null }) =>
+  u.first_name?.trim() || u.email || "Sans nom";
