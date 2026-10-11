@@ -212,3 +212,4 @@ export async function listFilterOptions() {
     categories: (c.data ?? []) as { code: string; name: string }[],
   };
 }
+
