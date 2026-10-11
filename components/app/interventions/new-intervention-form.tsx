@@ -37,18 +37,6 @@ const KIND_CHOICES: { value: InterventionKind; icon: IconName; title: string; te
     title: "Entretien préventif",
     text: "Nettoyage, vidange, révision : pour éviter les pannes.",
   },
-  {
-    value: "controle",
-    icon: "eye",
-    title: "Contrôle",
-    text: "Vérification, mesure ou contrôle obligatoire.",
-  },
-  {
-    value: "amelioration",
-    icon: "plus",
-    title: "Installation ou amélioration",
-    text: "Pose, modification ou remplacement prévu d'une machine.",
-  },
 ];
 
 const PRIORITIES: { value: "normal" | "urgence"; label: string }[] = [

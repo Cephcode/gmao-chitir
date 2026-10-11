@@ -11,13 +11,11 @@ import { isOpen, isOpenStatus, type InterventionStatus, type OpenStatus } from "
 
 export type InterventionType = "normal" | "urgence" | "alerte";
 // Type d'intervention (colonne kind) : réparation d'une panne, entretien, contrôle, amélioration.
-export type InterventionKind = "correctif" | "preventif" | "controle" | "amelioration";
+export type InterventionKind = "correctif" | "preventif";
 
 export const KIND_LABELS: Record<InterventionKind, string> = {
   correctif: "Réparation",
   preventif: "Entretien préventif",
-  controle: "Contrôle",
-  amelioration: "Installation ou amélioration",
 };
 export const KINDS = Object.keys(KIND_LABELS) as InterventionKind[];
 export const isKind = (v: unknown): v is InterventionKind =>
