@@ -5,16 +5,18 @@
 // propriétaire, éditeur, commentateur une fois terminée, ou dans le formulaire de clôture).
 import Link from "next/link";
 import type { Role } from "@/lib/session";
-import { ROLE_LABELS } from "@/lib/session";
-import { aujourdhui, dateCourte } from "@/lib/format";
+import { aujourdhui, dateCourte, nomPersonne } from "@/lib/format";
 import { STATE_BADGE } from "@/lib/equipements";
 import {
   type InterventionRow,
+  KIND_LABELS,
   TYPE_BADGE,
+  kindOf,
   listPartsFor,
   listTechnicians,
   listUsedParts,
   machineName,
+  technicianOptions,
 } from "@/lib/interventions";
 import { Icon } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
@@ -75,8 +77,8 @@ export async function InterventionSheet({
 
   const meta = [
     i.restaurant.short_code,
-    `déclarée${i.reporter?.first_name ? ` par ${i.reporter.first_name}` : ""} ${quand(i.reported_at)}`,
-    i.assignee?.first_name ?? (open ? "pas encore attribuée" : null),
+    `${kindOf(i) === "correctif" ? "déclarée" : "créée"}${i.reporter ? ` par ${nomPersonne(i.reporter)}` : ""} ${quand(i.reported_at)}`,
+    i.assignee ? nomPersonne(i.assignee) : open ? "pas encore attribuée" : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -104,6 +106,9 @@ export async function InterventionSheet({
         <div className="flex flex-wrap gap-1.5">
           <StatusBadge status={TYPE_BADGE[i.type]} />
           <StatusBadge status={STATUS_BADGE[i.status]} />
+          <span className="h-7 px-3 rounded-full bg-surface-2 text-[13px] font-semibold flex items-center">
+            {KIND_LABELS[kindOf(i)]}
+          </span>
         </div>
         <SheetTitle>
           {i.equipment ? (
@@ -149,10 +154,7 @@ export async function InterventionSheet({
             hasEquipment={Boolean(i.equipment_id)}
             initialWorkDone={i.work_done ?? ""}
             initialAssignee={i.assignee?.id ?? null}
-            technicians={technicians.map((t) => ({
-              id: t.id,
-              label: `${t.first_name ?? "Sans prénom"} · ${ROLE_LABELS[t.role]}`,
-            }))}
+            technicians={technicianOptions(technicians)}
             parts={parts}
           />
         </div>
@@ -189,7 +191,7 @@ export async function InterventionSheet({
               <span className="text-text-muted text-[15px]">Clôturée</span>
               <span className="text-[15px] font-semibold text-right">
                 {quand(i.closed_at)}
-                {i.closer?.first_name ? ` par ${i.closer.first_name}` : ""}
+                {i.closer ? ` par ${nomPersonne(i.closer)}` : ""}
               </span>
             </div>
           )}

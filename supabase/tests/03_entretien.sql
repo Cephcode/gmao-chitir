@@ -5,6 +5,9 @@ begin;
 select * from no_plan();
 
 -- next_due_date
+select is(next_due_date('journalier', '2026-09-15'), '2026-09-16'::date, 'journalier : +1 jour');
+select is(next_due_date('hebdomadaire', '2026-09-15'), '2026-09-22'::date, 'hebdomadaire : +7 jours');
+select is(next_due_date('journalier', '2026-12-31'), '2027-01-01'::date, 'journalier : passage d''année');
 select is(next_due_date('mensuel', '2026-09-15'), '2026-10-15'::date, 'mensuel : +1 mois');
 select is(next_due_date('trimestriel', '2026-09-15'), '2026-12-15'::date, 'trimestriel : +3 mois');
 select is(next_due_date('semestriel', '2026-09-15'), '2027-03-15'::date, 'semestriel : +6 mois');

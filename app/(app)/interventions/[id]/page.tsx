@@ -6,6 +6,7 @@ import { filtersQuery, getIntervention, loadInterventionList, readFilters } from
 import { InterventionList } from "@/components/app/interventions/intervention-list";
 import { InterventionSheet } from "@/components/app/interventions/intervention-sheet";
 import { readFailedCount } from "@/lib/photos";
+import { canSetStatus } from "@/lib/intervention-status";
 
 export default async function InterventionPage(props: PageProps<"/interventions/[id]">) {
   const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
@@ -23,7 +24,13 @@ export default async function InterventionPage(props: PageProps<"/interventions/
   return (
     <div className="lg:flex lg:items-start">
       <div className="hidden lg:block flex-1 min-w-0 pb-10">
-        <InterventionList {...list} filters={filters} selectedId={intervention.id} unread={unread} />
+        <InterventionList
+          {...list}
+          filters={filters}
+          selectedId={intervention.id}
+          unread={unread}
+          canCreate={canSetStatus(profile.role)}
+        />
       </div>
       <aside
         aria-label="Intervention"

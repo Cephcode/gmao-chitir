@@ -337,6 +337,15 @@ export async function EquipmentSheet({
         >
           <Icon name="alert" /> Déclarer une panne sur cette machine
         </Link>
+        {/* Entretien, contrôle, amélioration... : propriétaire, éditeur, commentateur */}
+        {canNoteMaintenance && (
+          <Link
+            href={`/interventions/nouvelle?equipement=${e.id}`}
+            className={`${buttonClass({ variant: "ghost" })} w-full`}
+          >
+            <Icon name="plus" /> Nouvelle intervention sur cette machine
+          </Link>
+        )}
       </div>
 
       {/* Historique (fiche de vie) */}

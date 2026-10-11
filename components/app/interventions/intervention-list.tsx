@@ -1,21 +1,26 @@
 // Liste des interventions (M-06a / O-07) : cartes sur mobile, tableau sur ordinateur.
 // Onglets Ouvertes / Terminées (/ Toutes sur ordinateur) avec compteurs ; ouvertes,
 // regroupement Urgences, Normales, Alertes ; puce « Statut » pour un statut ouvert précis.
-// Chaque ligne ouvre l'intervention.
+// Chaque ligne ouvre l'intervention. « Nouvelle intervention » (propriétaire, éditeur,
+// commentateur) crée une intervention de n'importe quel type.
 import Link from "next/link";
 import { Suspense } from "react";
-import { dateCourte, depuis } from "@/lib/format";
+import { dateCourte, depuis, nomPersonne } from "@/lib/format";
 import {
   type Filters,
   type InterventionRow,
   type Technician,
+  KINDS,
+  KIND_LABELS,
   TYPE_BADGE,
+  kindOf,
   TYPE_GROUPS,
   filtersQuery,
   machineName,
   problem,
 } from "@/lib/interventions";
 import { Icon } from "@/components/icons";
+import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { UrlFilters } from "@/components/app/url-filters";
@@ -23,7 +28,7 @@ import { OPEN_STATUSES, STATUS_BADGE, STATUS_LABELS, isOpen } from "@/lib/interv
 
 // « CTR1 · Salif · depuis 25 min » (ouverte) ou « CTR1 · Salif · clôturée le 16 sept. ».
 function subline(i: InterventionRow) {
-  const who = i.assignee?.first_name ?? (isOpen(i.status) ? "Pas encore attribuée" : null);
+  const who = i.assignee ? nomPersonne(i.assignee) : isOpen(i.status) ? "Pas encore attribuée" : null;
   const when =
     isOpen(i.status)
       ? `depuis ${depuis(i.reported_at)}`
@@ -33,6 +38,9 @@ function subline(i: InterventionRow) {
   return [i.restaurant.short_code, who, when].filter(Boolean).join(" · ");
 }
 
+// Type affiché devant la description, sauf pour une réparation (cas courant : une panne).
+const kindPrefix = (i: InterventionRow) => (kindOf(i) === "correctif" ? "" : `${KIND_LABELS[kindOf(i)]} · `);
+
 export function InterventionList({
   rows,
   filters,
@@ -41,6 +49,7 @@ export function InterventionList({
   technicians,
   selectedId,
   unread,
+  canCreate = false,
 }: {
   rows: InterventionRow[]; // déjà filtrées, statut compris
   filters: Filters;
@@ -49,6 +58,7 @@ export function InterventionList({
   technicians: Technician[];
   selectedId?: string;
   unread: number;
+  canCreate?: boolean; // propriétaire, éditeur, commentateur
 }) {
   const query = filtersQuery(filters);
   const grouped = filters.statut === "ouvertes";
@@ -72,6 +82,16 @@ export function InterventionList({
         <h1 className="flex-1 font-display text-[22px] lg:text-[32px] font-semibold m-0 leading-tight">
           Interventions
         </h1>
+        {canCreate && (
+          <Link
+            href={`/interventions/nouvelle${query}`}
+            className={`${buttonClass({ variant: "secondary" })} max-lg:h-touch max-lg:px-3.5`}
+          >
+            <Icon name="plus" />
+            <span className="lg:hidden">Nouvelle</span>
+            <span className="max-lg:hidden">Nouvelle intervention</span>
+          </Link>
+        )}
         <Link
           href="/notifications"
           aria-label={`Notifications, ${unread} non lues`}
@@ -135,8 +155,13 @@ export function InterventionList({
                 ]
               : []),
             {
-              name: "type",
+              name: "nature",
               label: "Type",
+              options: KINDS.map((k) => ({ value: k, label: KIND_LABELS[k] })),
+            },
+            {
+              name: "type",
+              label: "Priorité",
               options: [
                 { value: "urgence", label: "Urgence" },
                 { value: "normal", label: "Normal" },
@@ -148,7 +173,7 @@ export function InterventionList({
               label: "Technicien",
               options: [
                 { value: "aucun", label: "Pas encore attribuée" },
-                ...technicians.map((t) => ({ value: t.id, label: t.first_name ?? "Sans prénom" })),
+                ...technicians.map((t) => ({ value: t.id, label: nomPersonne(t) })),
               ],
             },
           ]}
@@ -202,6 +227,7 @@ export function InterventionList({
                       <StatusBadge status={STATUS_BADGE[i.status]} />
                     </div>
                     <div className="font-display font-semibold text-[17px]">{machineName(i)}</div>
+                    {kindPrefix(i) && <div className="text-text text-[14px] font-semibold">{KIND_LABELS[kindOf(i)]}</div>}
                     <div className="text-text-muted text-[13px]">{subline(i)}</div>
                   </Link>
                 ))}
@@ -214,7 +240,7 @@ export function InterventionList({
             <table className="w-full text-[14px] border-collapse">
               <thead>
                 <tr className="bg-background text-text-muted text-[12px] uppercase tracking-wide text-left">
-                  <th className="font-semibold px-4 py-3">Type</th>
+                  <th className="font-semibold px-4 py-3">Priorité</th>
                   <th className="font-semibold px-4 py-3">Équipement</th>
                   <th className="font-semibold px-4 py-3">Resto</th>
                   <th className="font-semibold px-4 py-3">Technicien</th>
@@ -252,11 +278,14 @@ export function InterventionList({
                           >
                             {machineName(i)}
                           </Link>
-                          <div className="text-text-muted text-[12.5px] truncate max-w-[260px]">{problem(i)}</div>
+                          <div className="text-text-muted text-[12.5px] truncate max-w-[260px]">
+                            {kindPrefix(i)}
+                            {problem(i)}
+                          </div>
                         </td>
                         <td className="px-4 py-2.5">{i.restaurant.short_code}</td>
                         <td className="px-4 py-2.5">
-                          {i.assignee?.first_name ?? <span className="text-text-muted">À attribuer</span>}
+                          {i.assignee ? nomPersonne(i.assignee) : <span className="text-text-muted">À attribuer</span>}
                         </td>
                         <td className="px-4 py-2.5">
                           {isOpen(i.status)

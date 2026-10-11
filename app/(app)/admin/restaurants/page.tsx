@@ -1,10 +1,12 @@
 // Restaurants (O-11) : propriétaire seulement. Synthèse par restaurant.
+
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { loadAdmin, restaurantStats } from "@/lib/admin";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { AdminHeader } from "@/components/app/admin/admin-views";
+import { DeleteRestaurantButton } from "@/components/app/delete-restaurant-button";
 
 export default async function RestaurantsPage() {
   const { actor, users, restaurants } = await loadAdmin();
@@ -37,6 +39,7 @@ export default async function RestaurantsPage() {
               <Link href={`/equipements?restaurant=${r.short_code}`} className="self-start py-2 text-orange-text font-bold text-[14px]">
                 Voir les équipements
               </Link>
+              <DeleteRestaurantButton restaurantId={r.id} name={r.name} />
             </Card>
           );
         })}

@@ -2,9 +2,13 @@
 
 Application de suivi des pannes, entretiens et pièces des restaurants Chitir Chicken.
 Next.js 16 (App Router) sur Vercel, Supabase (Postgres, Auth, Edge Function), Firebase (push), Resend (mails).
-Décisions et historique : `docs/journal-decisions.md`.
-**Pour modifier le projet** (carte des fichiers, recettes « je veux… », pièges connus) : `docs/guide-developpeur.md`.
-**Pour présenter l'application au client** : `docs/guide-presentation-client.md`.
+Mis à jour le 2026-10-08.
+
+- **État du projet et tâches restantes** (dont la remise des comptes au client) : `docs/taches-restantes.md`. **Commencer par là.**
+- **Pour modifier le projet** (carte des fichiers, écran par écran, recettes « je veux… », pièges connus) : `docs/guide-developpeur.md`.
+- **La base de données** (tables, fonctions SQL, droits, migrations) : `docs/base-de-donnees.md`.
+- Décisions et historique : `docs/journal-decisions.md`.
+- Pour présenter l'application au client : `docs/guide-presentation-client.md`.
 
 ## 1. Installation locale
 
@@ -28,7 +32,7 @@ allowedDevOrigins: ["192.168.11.*"],   // nom exact ou joker « * » ; la notati
 À adapter si le réseau change, puis ouvrir `http://<IP du poste>:3000` sur le téléphone. Ce réglage ne sert qu'en développement.
 ⚠️ En `http`, le téléphone n'a ni push, ni installation, ni presse-papiers moderne. Pour tester ces fonctions, utiliser l'adresse https de prévisualisation Vercel (section 8).
 
-**Base visée en local** : l'application lit `NEXT_PUBLIC_SUPABASE_URL`. Selon le fichier `.env*` utilisé, elle pointe sur la base locale (Docker) ou sur la base hébergée. La base hébergée contient les vraies données : ne jamais y écrire de données de test.
+**Base visée en local** : l'application lit `NEXT_PUBLIC_SUPABASE_URL`. Aujourd'hui, `.env.development.local` pointe sur la base **hébergée**, qui contient les vraies données du client : ne jamais y écrire de données de test. Pour lancer l'application sur la base locale (Docker) sans toucher à ce fichier : `docs/guide-developpeur.md`, section 7.
 
 ## 2. Variables d'environnement
 
@@ -80,6 +84,7 @@ Le build de production ne lit pas `.env.development.local` : tout doit être sai
 - Les écritures sur plusieurs tables (déclarer, clôturer, entretien, stock, ajout de restaurant) passent par des fonctions `SECURITY DEFINER` qui vérifient rôle et restaurant.
 - **Photos d'intervention** : bucket Storage `photos`, **privé** (migration `20260930230300`), affiché par des URL signées d'une heure. Chemin `{restaurant_id}/{intervention_id}/{uuid}.jpg`, photos réduites à 1600 px en JPEG dans le navigateur (quelques centaines de Ko). Le plan gratuit de Supabase donne **1 Go de Storage** : surveiller l'usage dans la console (Storage). Limite de 3 photos « avant » et 3 « après » par intervention, à changer à deux endroits : `PHOTOS_MAX_PAR_TYPE` dans `lib/photos.ts` et la fonction SQL `photos_max_par_type()` (nouvelle migration).
 - Le trigger d'envoi appelle l'adresse de l'Edge Function **hébergée**, écrite dans la migration `20260930190000`. En local, une notification validée déclenche donc un appel vers l'hébergé, qui ne trouve pas l'id et ne fait rien.
+  ⚠️ Cette adresse est celle du projet actuel (`jmxeewnhthhlutqgeixj`). **Sur un autre projet Supabase, les notifications ne partiraient pas.** Correction (adresse lue dans le Vault) : `docs/taches-restantes.md`, T2.
 
 ## 4. Tests
 
@@ -90,8 +95,8 @@ bash supabase/tests/run.sh            # tout : scénarios SQL (pgTAP), concurren
 bash supabase/tests/run.sh 01_stock   # un seul scénario SQL
 ```
 
-- Résultat attendu au 2026-09-30 : **639 réussis, 0 échoué**.
-- Fichiers : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, `11_comptes`, `concurrence.sh`.
+- Résultat attendu au 2026-10-06 : **677 réussis, 0 échoué**.
+- Fichiers : `01_stock`, `02_cloture`, `03_entretien`, `04_droits` (matrice rôle × action), `06_notifications`, `07_restaurant`, `08_statuts`, `09_categories`, `10_photos`, `11_comptes`, `12_retours_client`, `concurrence.sh`. Ce que vérifie chacun : `docs/guide-developpeur.md`, section 10.
 - Scénarios SQL dans `supabase/tests/`, chacun en transaction annulée : aucune donnée ne reste, rien n'est envoyé. Le script vérifie à la fin qu'aucune donnée de test ne reste.
 - Règles pures (droits d'administration, entretien, catégories, photos) : `tests/*.test.ts`, lancés par `node --test` depuis le script.
 - Le script refuse de tourner si le conteneur Docker local est absent.
@@ -105,10 +110,10 @@ bash supabase/tests/run.sh 01_stock   # un seul scénario SQL
 
 ## 6. Envoi des notifications
 
-1. Une ligne est ajoutée dans `notifications` (panne, clôture, stock, changement de statut, tâche du matin).
+1. Une ligne est ajoutée dans `notifications` (panne, clôture, stock, changement de statut, technicien attribué, tâche du matin).
 2. Le trigger `trg_notifications_envoi` appelle l'Edge Function `envoyer-notification` via pg_net, après validation de la transaction.
 3. La fonction réserve la notification (`delivered_at`) : un seul envoi, un id inconnu ou déjà envoyé ne fait rien. C'est pourquoi elle tourne sans jeton (`verify_jwt = false` dans `supabase/config.toml`).
-4. Push Firebase vers tous les appareils du destinataire. Mail Resend pour les urgences et les pannes seulement.
+4. Push Firebase vers tous les appareils du destinataire. Mail Resend pour les urgences, les pannes et les attributions seulement (`EMAIL_TYPES` dans la fonction).
 
 Déployer la fonction : `supabase functions deploy envoyer-notification`.
 Journaux : console Supabase, Edge Functions, Logs (aucune donnée personnelle n'y est écrite).
@@ -137,7 +142,7 @@ Pour que ce soit le client qui reçoive ces mails (présentation, remise) : son 
 
 ## 8. Déploiement (Vercel)
 
-- Projet Vercel relié au dépôt Git. Adresse : celle de `APP_URL`.
+- Projet Vercel relié au dépôt Git. Production : `https://gmao-chitir.vercel.app` (celle de `APP_URL`), construite à chaque fusion dans `main`. Au 2026-10-08, elle contient `main` = `staging` du 2026-09-30 (pull request n°1). Le client l'utilise déjà.
 - **Région des fonctions : Dublin (`dub1`)**, fixée dans `vercel.json`, à côté de la base Supabase (Irlande, `eu-west-1`). Par défaut, Vercel utilise Washington (`iad1`) : chaque lecture de la base traversait alors l'Atlantique (environ 80 ms, plusieurs fois par page). Le plan gratuit permet une seule région. Si la base change de région, changer aussi celle-ci.
 - Variables : section 2, à saisir dans Vercel pour chaque environnement utile (Production, Preview). Le script `bash scripts/vercel-env.sh [production]` les copie depuis `.env.development.local` (après `vercel link`), puis **Redeploy**. Sans elles : erreur « 500 Middleware » dès l'accueil.
 - Prévisualisation : chaque branche poussée (ex. `staging`) a son adresse https `gmao-chitir-…-cephcodes-projects.vercel.app`. L'ajouter aux Redirect URLs de Supabase (Authentication → URL Configuration), par exemple `https://gmao-chitir-*-cephcodes-projects.vercel.app/**`.
@@ -171,6 +176,8 @@ Le restaurant décide des données visibles, le rôle décide des actions. Contr
 | Déclarer une panne | oui | oui | oui | oui |
 | Créer, modifier équipement, pièce, catégorie, marque | oui | oui | non | non |
 | Choisir l'état de l'intervention à la déclaration | oui | oui | oui | non (« À planifier » imposé) |
+| Créer une intervention de tout type (« Nouvelle intervention ») | oui | oui | oui | non (« Déclarer une panne » à la place) |
+| Être choisi comme technicien d'une intervention | oui | oui | oui | non |
 | Changer le statut d'une intervention (hors « Terminée ») | oui | oui | oui | non |
 | Photos « avant » (intervention ouverte) | oui | oui | oui | oui |
 | Photos « après » (intervention terminée, ou à la clôture) | oui | oui | oui | non |
@@ -192,4 +199,7 @@ Un compte d'authentification sans profil dans `users` ne lit ni n'écrit rien.
 
 - **Statuts** : À planifier, En cours, En attente de pièce, Terminée. « Terminée » ne s'obtient **que par la clôture** (bouton Clôturer), qui décompte le stock, met à jour la machine et la fiche de vie, et prévient le déclarant. Une intervention terminée ne se rouvre pas. Chaque changement de statut (`changer_statut_intervention`) prévient le déclarant (réglage « Suivi de mes pannes »). L'onglet « En cours » regroupe tout ce qui n'est pas terminé (libellé demandé par le client). Libellés : `lib/intervention-status.ts`.
 - **Photos** : 3 « avant » et 3 « après » par intervention, compressées dans le navigateur, bucket privé `photos` (section 3). Changer la limite : `lib/photos.ts` **et** `photos_max_par_type()` en SQL.
+- **Types d'intervention** (2026-10-06) : Réparation (`correctif`), Entretien préventif (`preventif`), Contrôle (`controle`), Installation ou amélioration (`amelioration`). « Nouvelle intervention » (bouton de la liste, ou fiche d'une machine) pour propriétaire, éditeur et commentateur. Une réparation a les effets d'une panne déclarée (machine en panne, équipe prévenue) ; les autres types ne changent pas l'état de la machine. Dans la liste, la puce « Type » filtre le type d'intervention, la puce « Priorité » filtre Urgence, Normal, Alerte.
+- **Technicien attribué** : choisi à la création ou dans la fiche (liste avec recherche). Il reçoit la notification « Intervention attribuée » (application, push, mail), sauf s'il se choisit lui-même.
+- **Machines** : nom unique dans un restaurant (majuscules, accents et espaces ignorés) ; le même nom reste possible dans deux restaurants, c'est le code qui les distingue. Date d'installation : date du jour si on la laisse vide. Fréquences d'entretien : jour, semaine, mois, 3 mois, 6 mois, an.
 - **Catégories** : Administration, puis Catégories (propriétaire et éditeur). Nom unique, code de 3 lettres (sert aux futurs codes machines, le changer ne renomme pas les machines existantes), icône au choix. Suppression refusée par la base si une machine l'utilise.

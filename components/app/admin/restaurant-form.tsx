@@ -30,7 +30,8 @@ export function RestaurantForm({
     ...sources.map((s) => ({
       id: s.id as string | null,
       title: `Copier la liste de ${s.short_code}`,
-      text: `${s.count} machine${s.count > 1 ? "s" : ""}, sans historique. À ajuster ensuite.`,
+      // Les machines sont dupliquées (mêmes noms, codes du nouveau restaurant) : on le dit clairement.
+      text: `Crée ${s.count} nouvelle${s.count > 1 ? "s" : ""} machine${s.count > 1 ? "s" : ""} portant les mêmes noms que celles de ${s.short_code}, sans historique. À ajuster ensuite.`,
     })),
   ];
 

@@ -6,7 +6,8 @@
 import { useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 
-export type ComboOption = { value: string; label: string; hint?: string };
+// sub : seconde ligne sous le libellé (ex. e-mail d'un technicien), prise en compte par la recherche.
+export type ComboOption = { value: string; label: string; hint?: string; sub?: string };
 export type ComboValue = { id: string } | { newName: string } | null;
 
 const normalize = (s: string) =>
@@ -55,7 +56,7 @@ export function Combobox({
 
   const q = query.trim();
   const matches = useMemo(
-    () => (q ? options.filter((o) => normalize(o.label).includes(normalize(q))) : options),
+    () => (q ? options.filter((o) => normalize(`${o.label} ${o.sub ?? ""}`).includes(normalize(q))) : options),
     [options, q],
   );
   const exact = options.some((o) => normalize(o.label) === normalize(q));
@@ -160,10 +161,15 @@ export function Combobox({
             >
               {item.kind === "option" ? (
                 <>
-                  <span>
+                  <span className="min-w-0 py-1.5">
                     <Highlight text={item.o.label} query={q} />
+                    {item.o.sub && (
+                      <span className="block text-text-muted text-[13px] truncate">
+                        <Highlight text={item.o.sub} query={q} />
+                      </span>
+                    )}
                   </span>
-                  {item.o.hint && <span className="text-text-muted text-[13px]">{item.o.hint}</span>}
+                  {item.o.hint && <span className="shrink-0 text-text-muted text-[13px]">{item.o.hint}</span>}
                 </>
               ) : (
                 <span className="inline-flex items-center gap-2">

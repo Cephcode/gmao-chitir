@@ -11,7 +11,8 @@ export type NotificationType =
   | "entretien_retard"
   | "stock_bas"
   | "reparation"
-  | "statut_intervention";
+  | "statut_intervention"
+  | "attribution";
 
 export type NotificationRow = {
   id: string;
@@ -31,6 +32,7 @@ export const TYPE_STYLE: Record<NotificationType, { icon: IconName; tone: string
   stock_bas: { icon: "down", tone: "bg-warning-bg text-warning" },
   reparation: { icon: "check", tone: "bg-success-bg text-success" },
   statut_intervention: { icon: "refresh", tone: "bg-info-bg text-info" },
+  attribution: { icon: "user", tone: "bg-info-bg text-info" },
 };
 
 // Catégories du filtre (colonne de gauche sur ordinateur).
@@ -41,6 +43,7 @@ export const CATEGORIES: { value: string; label: string; icon: IconName; types: 
   { value: "stock", label: "Stock", icon: "down", types: ["stock_bas"] },
   { value: "reparations", label: "Réparations", icon: "check", types: ["reparation"] },
   { value: "suivi", label: "Suivi", icon: "refresh", types: ["statut_intervention"] },
+  { value: "attributions", label: "Attribuées", icon: "user", types: ["attribution"] },
 ];
 
 // Réglages « Mes alertes » : un interrupteur par type (activé par défaut).
@@ -52,6 +55,7 @@ export const SETTINGS: { type: NotificationType; label: string; hint: string }[]
   { type: "stock_bas", label: "Stock sous le seuil", hint: "Une fois par pièce" },
   { type: "reparation", label: "Réparations", hint: "Quand une machine que j'ai signalée est réparée" },
   { type: "statut_intervention", label: "Suivi de mes pannes", hint: "Quand le statut d'une panne que j'ai signalée change" },
+  { type: "attribution", label: "Interventions qui me sont attribuées", hint: "Dès qu'on me choisit comme technicien, aussi par e-mail" },
 ];
 
 export async function listNotifications(): Promise<NotificationRow[]> {

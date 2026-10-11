@@ -28,6 +28,8 @@ type Options = {
 };
 
 const FREQUENCIES: { value: Frequency; label: string }[] = [
+  { value: "journalier", label: "Jour" },
+  { value: "hebdomadaire", label: "Semaine" },
   { value: "mensuel", label: "Mois" },
   { value: "trimestriel", label: "3 mois" },
   { value: "semestriel", label: "6 mois" },
@@ -260,7 +262,12 @@ export function EquipmentForm({
                   onChange={(e) => set("serialNumber", e.target.value)}
                 />
               </Field>
-              <Field label="Installé le" htmlFor="eq-installed" optional>
+              <Field
+                label="Installé le"
+                htmlFor="eq-installed"
+                optional
+                hint={creating ? "Date du jour si vous ne la connaissez pas." : undefined}
+              >
                 <TextInput
                   id="eq-installed"
                   type="date"

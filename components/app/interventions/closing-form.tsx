@@ -19,8 +19,9 @@ import type { StockPart } from "@/lib/interventions";
 import { Icon } from "@/components/icons";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Combobox } from "@/components/ui/combobox";
-import { Field, focusHalo } from "@/components/ui/field";
+import { Combobox, type ComboOption } from "@/components/ui/combobox";
+import { TechnicianPicker } from "@/components/app/interventions/technician-picker";
+import { Field } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { PhotoPicker, type PendingPhoto } from "@/components/app/photos/photos";
 import { sendPhotos } from "@/lib/photos-browser";
@@ -103,7 +104,7 @@ export function ClosingForm({
   hasEquipment: boolean; // machine hors liste : pas d'état à remettre
   initialWorkDone: string;
   initialAssignee: string | null;
-  technicians: { id: string; label: string }[];
+  technicians: ComboOption[]; // technicianOptions (lib/interventions.ts)
   parts: StockPart[];
 }) {
   const [workDone, setWorkDone] = useState(initialWorkDone);
@@ -227,24 +228,13 @@ export function ClosingForm({
         hint="Envoyées au moment de la clôture."
       />
 
-      <Field label="Technicien" htmlFor="technician">
-        <div className={`relative flex items-center h-field rounded border-[1.5px] border-border-strong bg-surface ${focusHalo}`}>
-          <Icon name="user" className="absolute left-3.5 text-text-muted pointer-events-none" />
-          <select
-            id="technician"
-            value={assignedTo}
-            onChange={(e) => setAssignedTo(e.target.value)}
-            className="appearance-none w-full h-full bg-transparent pl-11 pr-10 text-[16px] text-text outline-none cursor-pointer"
-          >
-            <option value="">Pas encore attribuée</option>
-            {technicians.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevronDown" className="absolute right-3.5 pointer-events-none" />
-        </div>
+      <Field label="Technicien" htmlFor="technician" hint="Tapez un prénom ou un e-mail. Il est prévenu dès l'enregistrement.">
+        <TechnicianPicker
+          id="technician"
+          options={technicians}
+          value={assignedTo || null}
+          onChange={(id) => setAssignedTo(id ?? "")}
+        />
       </Field>
 
       {result?.ok === false && <Alert variant="danger">{result.error}</Alert>}
