@@ -12,14 +12,18 @@ import { buttonClass } from "@/components/ui/button";
 import { deconnexion } from "@/lib/auth-actions";
 import { oublierCetAppareil } from "@/lib/push-appareil";
 
-type NavItem = { href: string; label: string; short: string; icon: IconName };
+// also : autres adresses où l'onglet reste actif (l'onglet mobile Stock couvre aussi les consommables).
+type NavItem = { href: string; label: string; short: string; icon: IconName; also?: string[] };
 
 const MAIN_ITEMS: NavItem[] = [
   { href: "/", label: "Tableau de bord", short: "Accueil", icon: "home" },
   { href: "/equipements", label: "Équipements", short: "Équipements", icon: "fridge" },
   { href: "/interventions", label: "Interventions", short: "Interventions", icon: "wrench" },
-  { href: "/stock", label: "Stock", short: "Stock", icon: "box" },
+  { href: "/stock", label: "Stock", short: "Stock", icon: "box", also: ["/consommables"] },
 ];
+
+// Menu latéral seulement : la barre du bas garde 4 onglets.
+const CONSOMMABLES_ITEM: NavItem = { href: "/consommables", label: "Consommables", short: "Consommables", icon: "cup" };
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -58,6 +62,7 @@ export function Sidebar({
         ? { ...i, badge: urgences, badgeLabel: `${urgences} urgences en cours` }
         : i,
     ),
+    CONSOMMABLES_ITEM,
     { href: "/notifications", label: "Notifications", short: "Notifications", icon: "bell", badge: unread, badgeLabel: `${unread} non lues` },
     ...(canAdmin
       ? [{ href: "/admin/utilisateurs", label: "Administration", short: "Admin", icon: "shield" as IconName }]
@@ -142,7 +147,7 @@ export function BottomNav() {
       className="lg:hidden fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-border grid grid-cols-4 px-2 pt-2 pb-[max(14px,env(safe-area-inset-bottom))]"
     >
       {MAIN_ITEMS.map((item) => {
-        const active = isActive(pathname, item.href);
+        const active = [item.href, ...(item.also ?? [])].some((href) => isActive(pathname, href));
         return (
           <Link
             key={item.href}

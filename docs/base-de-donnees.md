@@ -1,6 +1,6 @@
 # Référence de la base de données
 
-Mise à jour le 2026-10-08, à partir de la base locale après les 26 migrations (identique à l'hébergée).
+Mise à jour le 2026-10-08, à partir de la base locale après les 26 migrations (identique à l'hébergée), plus la migration des consommables du 2026-10-09 (branche `feature/stock-consommables`, pas encore sur l'hébergée).
 Pour **modifier** la base (nouvelle migration, redéfinir une fonction, droits) : `docs/guide-developpeur.md`, section 6. Ici, on trouve **ce qui existe** et **où c'est défini**.
 
 Afficher soi-même l'état réel (base locale, après `supabase start`) :
@@ -42,6 +42,8 @@ Sur l'hébergé : Supabase → Table Editor (données), Database → Functions, 
 | `stock_movement_reason` | `livraison`, `intervention`, `ajustement` | Raison d'un mouvement de stock. |
 | `notification_type` | `urgence`, `panne`, `entretien_prevu`, `entretien_retard`, `stock_bas`, `reparation`, `statut_intervention`, `attribution` | Type d'alerte, réglable dans « Mes alertes » (`SETTINGS` dans `lib/notifications.ts`). Mails : `urgence`, `panne`, `attribution` (`EMAIL_TYPES` dans l'Edge Function). |
 | `photo_kind` | `avant`, `apres` | Photo de la panne ou du travail fait. |
+| `article_famille` | `jetable`, `boisson`, `materiel` | Famille d'un consommable : emballages et jetables, boissons, matériel et fournitures en gros. Libellés : `FAMILLE_LABELS` (`lib/consommables-rules.ts`). |
+| `article_mouvement_raison` | `livraison`, `consommation`, `perte`, `inventaire`, `transfert` | Raison d'un mouvement de consommable. |
 
 Ajouter une valeur : `alter type … add value '…';` dans une migration **seule** (voir le guide).
 
@@ -49,7 +51,7 @@ Ajouter une valeur : `alter type … add value '…';` dans une migration **seul
 
 ## 3. Tables
 
-`!` = obligatoire. Toutes les clés primaires `id` sont des `uuid` générés.
+`!` = obligatoire. Toutes les clés primaires `id` sont des `uuid` générés (sauf `article_stocks` : clé double article + restaurant).
 
 ### Comptes et restaurants
 
@@ -88,6 +90,16 @@ Les comptes de connexion eux-mêmes (e-mail, mot de passe) sont dans `auth.users
 | `stock_movements` | `part_id!`, `delta!` (≠ 0), `reason!`, `intervention_id`, `user_id`, `created_at` | Historique des entrées et sorties. |
 | `part_compatibilities` | `part_id!`, `equipment_id!` | « Va avec » : machines pour lesquelles la pièce est prévue. Elles remontent en premier à la clôture. |
 
+### Consommables (stock des restaurants)
+
+Plan et règles : `docs/plan-module-consommables.md`. Migration : `20261009090000_consommables.sql`.
+
+| Table | Colonnes | Rôle |
+|---|---|---|
+| `articles` | `code!` (unique, `^[A-Z0-9][A-Z0-9-]{0,29}$`), `name!` (unique sans casse : index `articles_nom_unique`), `famille!`, `unit!` (liste fermée `articles_unit_check`), `default_threshold!` (≥ 0), `notes`, `created_at`, `updated_at` | Catalogue **commun à la chaîne** (gobelets, boissons, huile en gros…). Le seuil par défaut est donné à un restaurant quand il commence à suivre l'article. |
+| `article_stocks` | `article_id!`, `restaurant_id!` (clé double), `quantity!` (≥ 0), `min_threshold!` (≥ 0), `updated_at` | Quantité et seuil **par restaurant**. Ligne présente = article suivi dans ce restaurant. Ne s'écrit que par les fonctions. |
+| `article_mouvements` | `article_id!` (**restrict**), `restaurant_id!`, `delta!` (≠ 0), `raison!`, `transfert_id` (obligatoire pour un transfert, sinon vide), `autre_restaurant_id`, `note`, `user_id`, `created_at` | Historique. Un transfert = deux lignes (−q, +q) de même `transfert_id`. |
+
 ### Notifications
 
 | Table | Colonnes | Rôle |
@@ -115,6 +127,11 @@ Une fonction peut être redéfinie par plusieurs migrations : **c'est la derniè
 | `prochain_code_equipement(p_restaurant_id, p_category_id)` | Connecté | Propose le prochain code libre (`CTR1-CUI-02`). | `app/(app)/equipements/actions.ts` (`suggererCode`) | `20260930090000` |
 | `noter_entretien_fait(p_equipment_id, p_done_at, p_notes)` | Propriétaire, éditeur, commentateur | Entretien fait (pas de date future) : plan recalé, journal, fiche de vie. | `app/(app)/equipements/actions.ts` | `20260930210300` |
 | `mouvement_stock(p_part_id, p_delta, p_reason)` | Propriétaire, éditeur | Livraison (+) ou correction ; jamais négatif ; la sortie « intervention » passe par la clôture ; alerte `stock_bas` au franchissement du seuil. | `app/(app)/stock/actions.ts` | `20260930210300` |
+| `mouvement_article(p_article, p_restaurant, p_raison, p_quantite, p_note)` | Propriétaire, éditeur du restaurant | Livraison (+), consommation ou perte (−) ; quantité toujours positive ; première livraison = l'article devient suivi (seuil par défaut) ; jamais négatif ; alerte `stock_bas` au franchissement du seuil. Renvoie la nouvelle quantité. | `app/(app)/consommables/actions.ts` | `20261009090000` |
+| `inventaire_article(p_article, p_restaurant, p_quantite, p_note)` | Propriétaire, éditeur du restaurant | Quantité **comptée** : l'écart est enregistré (raison `inventaire`), calculé sous verrou ; rien si l'écart est nul. Renvoie l'écart. | idem | `20261009090000` |
+| `transferer_article(p_article, p_de, p_vers, p_quantite, p_note)` | Propriétaire, éditeur des **deux** restaurants | Deux mouvements liés ; stock suffisant au départ ; verrous dans un ordre fixe ; alerte au départ. | idem | `20261009090000` |
+| `regler_seuil_article(p_article, p_restaurant, p_seuil)` | Propriétaire, éditeur du restaurant | Règle le seuil (l'article devient suivi). | idem | `20261009090000` |
+| `ne_plus_suivre_article(p_article, p_restaurant)` | Propriétaire, éditeur du restaurant | Retire la ligne de stock si la quantité est 0 ; l'historique reste. | idem | `20261009090000` |
 | `ajouter_restaurant(p_name, p_short_code, p_address, p_copy_from)` | Propriétaire | Crée le restaurant (code de 2 à 6 lettres ou chiffres). Avec `p_copy_from` : copie les machines (nouveaux codes, sans historique), leurs plans d'entretien et les « va avec ». | `app/(app)/admin/actions.ts` | `20260930210000` |
 
 ### Fonctions d'aide (utilisées par les politiques et les fonctions)
@@ -133,6 +150,8 @@ Une fonction peut être redéfinie par plusieurs migrations : **c'est la derniè
 | `code_categorie_libre(p_name)` | Code libre pour une nouvelle catégorie (non appelable directement) | `20260930090000` |
 | `date_courte_fr(d)` | « 6 oct. » dans les textes de notification | `20260930170000` |
 | `set_updated_at()` | Met à jour `updated_at` | `20260929173837` |
+| `consommable_controle(p_article, p_restaurant)` | Contrôles communs des fonctions de consommables (connexion, rôle, restaurant existant et accessible, article). **Non appelable directement** | `20261009090000` |
+| `alerte_article_bas(…)` | Notification `stock_bas` d'un consommable aux propriétaires et éditeurs du restaurant. **Non appelable directement** | `20261009090000` |
 
 ### Tâches et triggers
 
@@ -165,6 +184,8 @@ Ce que l'application peut faire **sans** passer par une fonction (lecture surtou
 | `parts` | tout compte avec profil | propriétaire, éditeur, **quantité 0** | propriétaire, éditeur | propriétaire |
 | `stock_movements` | tout compte avec profil | — (fonctions) | — | — |
 | `part_compatibilities` | tout compte avec profil | propriétaire, éditeur | — | propriétaire, éditeur |
+| `articles` | tout compte avec profil | propriétaire, éditeur | propriétaire, éditeur | propriétaire (refusé si mouvements) |
+| `article_stocks`, `article_mouvements` | restaurant accessible | — (fonctions ; droits d'écriture retirés) | — | — |
 | `notifications` | les siennes | — (fonctions) | les siennes (colonne `read_at` seulement) | — |
 | `notification_settings`, `push_tokens` | les siens | les siens | les siens | les siens |
 | `storage.objects` (bucket `photos`) | intervention accessible | selon `photo_objet_ajout_autorise` | — | son auteur, propriétaire, éditeur |
@@ -213,6 +234,7 @@ Toutes dans `supabase/migrations/`, appliquées dans l'ordre des noms. **Ne jama
 | `20261006090000_frequences_et_natures_valeurs.sql` | Valeurs seules : fréquences `journalier` et `hebdomadaire`, types d'intervention `controle` et `amelioration`, notification `attribution`. |
 | `20261006090100_equipements_date_et_noms.sql` | Échéances jour et semaine, date d'installation par défaut, noms uniques par restaurant. |
 | `20261006090200_creer_intervention.sql` | `creer_intervention`, notification `attribution` au technicien. |
+| `20261009090000_consommables.sql` | Module Consommables : types, tables `articles`, `article_stocks`, `article_mouvements`, RLS, fonctions de mouvement, inventaire, transfert, seuil. Ne modifie aucune table existante. |
 
 ---
 
