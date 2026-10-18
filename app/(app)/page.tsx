@@ -321,6 +321,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
           )}
 
           {/* mobile : deconnexion */}
+          
           <Logout />
 
           {/* Ordinateur : entretiens des 7 jours */}
