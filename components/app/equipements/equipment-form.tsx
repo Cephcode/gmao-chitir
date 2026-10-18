@@ -34,6 +34,7 @@ const FREQUENCIES: { value: Frequency; label: string }[] = [
   { value: "trimestriel", label: "3 mois" },
   { value: "semestriel", label: "6 mois" },
   { value: "annuel", label: "An" },
+  { value: "minute", label: "Minute" },
 ];
 
 const STATES: { value: EquipmentState; label: string }[] = [

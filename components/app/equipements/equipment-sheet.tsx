@@ -56,29 +56,43 @@ const INTERVENTION_TITLE: Record<OpenIntervention["type"], string> = {
 const HISTORY_PREVIEW = 4; // événements visibles sur mobile avant « Voir les N événements »
 const TZ = "Africa/Ouagadougou";
 
+// Jour "YYYY-MM-DD" d'un instant, dans le fuseau du projet
+const jourLocal = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
+
 // « Auj. 08:40 » pour aujourd'hui, sinon « 22 août ».
 function eventDate(iso: string) {
-  if (iso.slice(0, 10) !== aujourdhui()) return dateCourte(iso);
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  if (jourLocal(d) !== jourLocal(new Date())) return dateCourte(iso);
   const heure = new Intl.DateTimeFormat("fr-FR", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: TZ,
-  }).format(new Date(iso));
+  }).format(d);
   return `Auj. ${heure}`;
 }
 
 // « 22 août 2026 »
 function dateLongue(date: string) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(
-    new Date(date + "T00:00:00Z"),
-  );
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "Date invalide";
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: TZ,
+  }).format(d);
 }
 
 // « Mars 2024 »
 function moisAnnee(date: string) {
-  const s = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-    new Date(date + "T00:00:00Z"),
-  );
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "Date invalide";
+  const s = new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+    timeZone: TZ,
+  }).format(d);
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 

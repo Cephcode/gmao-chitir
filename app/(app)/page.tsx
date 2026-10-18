@@ -16,6 +16,7 @@ import { STATUS_LABELS, type OpenStatus } from "@/lib/intervention-status";
 import { KpiCard } from "@/components/app/kpi-card";
 import { ListRow } from "@/components/app/list-row";
 import { RestaurantSelect } from "@/components/app/restaurant-select";
+import {Logout} from "@/components/logout";
 
 type Restaurant = { id: string; name: string; short_code: string };
 type Equipment = {
@@ -172,7 +173,7 @@ export default async function TableauDeBord(props: PageProps<"/">) {
         />
         <div className="flex-1 min-w-0">
           <div className="text-text-muted text-[13px]">
-            Bonjour {profile?.first_name ?? ""} · {profile ? ROLE_LABELS[profile.role] : ""}
+            Bienvenue {profile?.first_name ?? ""} · {profile ? ROLE_LABELS[profile.role] : ""}
           </div>
           <h1 className="font-display text-[22px] lg:text-[32px] font-semibold m-0 leading-tight">
             {selected ? `Tableau de bord · ${selected.short_code}` : "Tableau de bord"}
@@ -318,6 +319,9 @@ export default async function TableauDeBord(props: PageProps<"/">) {
               <Icon name="chevronRight" className="text-text-muted" />
             </Link>
           )}
+
+          {/* mobile : deconnexion */}
+          <Logout />
 
           {/* Ordinateur : entretiens des 7 jours */}
           <section className="hidden lg:flex flex-col gap-3">
