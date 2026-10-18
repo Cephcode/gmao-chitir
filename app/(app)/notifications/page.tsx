@@ -83,6 +83,12 @@ export default async function NotificationsPage(props: PageProps<"/notifications
         <h1 className="flex-1 font-display text-[22px] lg:text-[32px] font-semibold m-0 leading-tight">
           Notifications
         </h1>
+          <Link
+              href="/notifications/alertes"
+            className="hidden  self-center inline-flex items-center gap-2 py-3 text-orange-text font-bold text-[15px]"
+          >
+            <Icon name="bell" size={18} /> Choisir les alertes que je reçois
+          </Link>
         {unreadCount > 0 && (
           <form action={toutMarquerLu}>
             <Button type="submit" variant="secondary" size="sm" icon="check">
@@ -91,6 +97,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
           </form>
         )}
       </header>
+
 
       {/* Mobile : onglets Toutes / Non lues */}
       <nav aria-label="Filtre des notifications" className="lg:hidden grid grid-cols-2 p-1 rounded bg-surface-2">
@@ -140,6 +147,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
         </nav>
 
         <section className="flex flex-col gap-4 min-w-0">
+          
           {groups.length === 0 ? (
             <Card className="flex items-center gap-3">
               <span className="size-11 rounded bg-success-bg text-success flex items-center justify-center shrink-0">
