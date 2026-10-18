@@ -85,7 +85,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
         </h1>
           <Link
               href="/notifications/alertes"
-            className="hidden  self-center inline-flex items-center gap-2 py-3 text-orange-text font-bold text-[15px]"
+            className="hidden  self-center md:inline-flex items-center gap-2 py-3 text-orange-text font-bold text-[15px]"
           >
             <Icon name="bell" size={18} /> Choisir les alertes que je reçois
           </Link>
@@ -118,8 +118,17 @@ export default async function NotificationsPage(props: PageProps<"/notifications
               {t.label}
             </Link>
           );
+          
         })}
+
+
       </nav>
+                        <Link
+              href="/notifications/alertes"
+            className=" md:hidden self-center inline-flex items-center gap-2 py-3 text-orange-text font-bold text-[15px]"
+          >
+            <Icon name="bell" size={18} /> Choisir les alertes que je reçois
+          </Link>
 
       {/* 3 colonnes seulement sur grand écran (xl) : entre 1024 et 1280 px, avec le menu
           latéral, la liste serait écrasée ; « Mes alertes » passe alors dessous. */}
