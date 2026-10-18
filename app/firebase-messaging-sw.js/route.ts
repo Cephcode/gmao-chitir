@@ -19,22 +19,21 @@ messaging.onBackgroundMessage(function (payload) {
 
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
-  var raw = (event.notification.data && event.notification.data.link) || "/";
-  var link = new URL(raw, self.location.origin).href;
+  var link = new URL((event.notification.data && event.notification.data.link) || "/", self.location.origin).href;
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (fenetres) {
-      for (var i = 0; i < fenetres.length; i++) {
-        if (new URL(fenetres[i].url).origin === new URL(link).origin) {
-          return fenetres[i].focus().then(function (w) {
-            return w && "navigate" in w ? w.navigate(link) : w;
-          });
-        }
+    caches.open("push-nav").then(function (cache) {
+      return cache.put("/pending-nav", new Response(link));
+    }).then(function () {
+      return self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    }).then(function (fenetres) {
+      if (fenetres.length) {
+        fenetres[0].postMessage({ type: "NAVIGATE", link: link });
+        return fenetres[0].focus();
       }
       return self.clients.openWindow(link);
     })
   );
-});
-`;
+});`;
 
 export function GET() {
   const config = {
