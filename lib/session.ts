@@ -13,7 +13,7 @@ export type Profile = {
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  proprietaire: "Propriétaire",
+  proprietaire: "Administrateur",
   editeur: "Éditeur",
   commentateur: "Commentateur",
   lecteur: "Lecteur",
