@@ -13,6 +13,8 @@ import {
 } from "@/lib/equipements";
 import { EquipmentList } from "@/components/app/equipements/equipment-list";
 import { EquipmentSheet } from "@/components/app/equipements/equipment-sheet";
+import { Suspense } from "react";
+import { DeleteNotificationButton } from "@/components/app/notifications/delete-notification-button";
 
 export default async function FicheEquipementPage(props: PageProps<"/equipements/[id]">) {
   const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
@@ -52,6 +54,11 @@ export default async function FicheEquipementPage(props: PageProps<"/equipements
           showAllHistory={searchParams.historique === "tout"}
           query={filtersQuery(filters)}
         />
+        {/* Ouverte depuis une notification (?notif=<id>) : bouton pour la supprimer.
+            useSearchParams exige une frontière Suspense. */}
+        <Suspense fallback={null}>
+          <DeleteNotificationButton />
+        </Suspense>
       </aside>
     </div>
   );

@@ -52,7 +52,7 @@ export const SETTINGS: { type: NotificationType; label: string; hint: string }[]
   { type: "panne", label: "Pannes normales", hint: "Dès la déclaration" },
   { type: "entretien_prevu", label: "Entretien à prévoir", hint: "3 jours avant la date" },
   { type: "entretien_retard", label: "Entretien en retard", hint: "Chaque matin à 7 h" },
-  { type: "stock_bas", label: "Stock sous le seuil", hint: "Une fois par pièce" },
+  { type: "stock_bas", label: "Stock sous le seuil", hint: "Pièces et consommables, une fois par passage sous le seuil" },
   { type: "reparation", label: "Réparations", hint: "Quand une machine que j'ai signalée est réparée" },
   { type: "statut_intervention", label: "Suivi de mes pannes", hint: "Quand le statut d'une panne que j'ai signalée change" },
   { type: "attribution", label: "Interventions qui me sont attribuées", hint: "Dès qu'on me choisit comme technicien, aussi par e-mail" },

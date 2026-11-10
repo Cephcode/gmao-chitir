@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Poppins } from "next/font/google";
+import {PushNavigation} from "@/components/app/notifications/deep-linking";
 import "./globals.css";
 
 // Figtree (texte): lisible en petite taille, chiffres tabulaires pour quantites et dates.
@@ -34,7 +35,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="fr"
       className={`${figtree.variable} ${poppins.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">{children}
+      <PushNavigation /></body>
     </html>
   );
 }

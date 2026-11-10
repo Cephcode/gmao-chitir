@@ -6,7 +6,7 @@ import { aujourdhui } from "@/lib/format";
 import type { StatusKey } from "@/components/ui/status-badge";
 
 export type EquipmentState = "operationnel" | "en_panne" | "en_maintenance" | "hors_service";
-export type Frequency = "journalier" | "hebdomadaire" | "mensuel" | "trimestriel" | "semestriel" | "annuel";
+export type Frequency = "journalier" | "hebdomadaire" | "mensuel" | "trimestriel" | "semestriel" | "annuel"| "minute";
 
 export type Plan = {
   task: string | null;
@@ -50,6 +50,7 @@ export const FREQUENCY_LABELS: Record<Frequency, string> = {
   trimestriel: "Tous les 3 mois",
   semestriel: "Tous les 6 mois",
   annuel: "Tous les ans",
+  minute: "Toutes les minutes",
 };
 
 // Ordre « Pannes d'abord » : ce qui demande une action remonte en tête.
@@ -66,12 +67,15 @@ export type Maintenance =
   | { status: "a_jour"; next: string }
   | { status: "en_retard"; next: string; days: number };
 
-export function maintenanceOf(plan: Plan | null, today = aujourdhui()): Maintenance {
+export function maintenanceOf(plan: Plan | null, now = Date.now()): Maintenance {
   if (!plan?.next_due_at) return { status: "a_definir" };
-  if (plan.next_due_at >= today) return { status: "a_jour", next: plan.next_due_at };
-  const days = Math.round(
-    (Date.parse(today + "T00:00:00Z") - Date.parse(plan.next_due_at + "T00:00:00Z")) / 86400000,
-  );
+
+  const due = Date.parse(plan.next_due_at);
+  if (Number.isNaN(due)) return { status: "a_definir" };
+
+  if (due >= now) return { status: "a_jour", next: plan.next_due_at };
+
+  const days = Math.floor((now - due) / 86400000);
   return { status: "en_retard", next: plan.next_due_at, days };
 }
 

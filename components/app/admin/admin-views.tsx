@@ -16,19 +16,20 @@ export function AdminHeader({
   categoryCount,
 }: {
   actor: Actor;
-  tab: "utilisateurs" | "restaurants" | "categories";
+  tab: "utilisateurs" | "restaurants" | "categories" | "reglages";
   userCount: number;
   restaurantCount: number;
   // Affiché seulement sur l'onglet Catégories (inutile de compter sur les autres pages).
   categoryCount?: number;
 }) {
   const isOwner = actor.role === "proprietaire";
-  // Onglets : l'éditeur voit Utilisateurs et Catégories, le propriétaire aussi Restaurants.
-  // Sur mobile, les nombres sont masqués pour que les trois onglets tiennent sur 390 px.
+  // Onglets : l'éditeur voit Utilisateurs et Catégories, le propriétaire aussi Restaurants et Réglages.
+  // Sur mobile, les nombres sont masqués et la barre défile si les onglets dépassent 390 px.
   const tabs: { key: string; label: string; count?: number }[] = [
     { key: "utilisateurs", label: "Utilisateurs", count: userCount },
     ...(isOwner ? [{ key: "restaurants", label: "Restaurants", count: restaurantCount }] : []),
     { key: "categories", label: "Catégories", count: categoryCount },
+    ...(isOwner ? [{ key: "reglages", label: "Réglages" }] : []),
   ];
   return (
     <div className="flex flex-col gap-4">
@@ -43,7 +44,7 @@ export function AdminHeader({
           <Link href="/admin/utilisateurs/nouveau" className={buttonClass({ variant: "secondary" })}>
             <Icon name="plus" /> <span className="hidden sm:inline">Créer un compte</span>
           </Link>
-        ) : tab === "categories" ? (
+        ) : tab === "reglages" ? null : tab === "categories" ? (
           <Link href="/admin/categories/nouveau" className={buttonClass({ variant: "secondary" })}>
             <Icon name="plus" /> <span className="hidden sm:inline">Ajouter une catégorie</span>
           </Link>
@@ -55,7 +56,7 @@ export function AdminHeader({
           )
         )}
       </header>
-      <nav aria-label="Sections" className="flex gap-6 border-b border-border">
+      <nav aria-label="Sections" className="flex gap-6 border-b border-border overflow-x-auto">
         {tabs.map((t) => (
           <Link
             key={t.key}

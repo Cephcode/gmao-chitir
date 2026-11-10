@@ -21,14 +21,15 @@ export function dateCourte(date: string): string {
 
 // Date du jour au format AAAA-MM-JJ (UTC, le Burkina Faso est en UTC+0).
 export function aujourdhui(): string {
-  return new Date().toISOString().slice(0, 10);
+    return new Date().toISOString().slice(0, 19) + "Z";
 }
 
 // Ajoute n jours à une date AAAA-MM-JJ.
 export function plusJours(date: string, n: number): string {
-  const d = new Date(date + "T00:00:00Z");
+  const d = new Date(date); // accepte "2026-10-17" et "2026-10-17T20:10:15Z"
+  if (Number.isNaN(d.getTime())) throw new Error(`Date invalide : ${date}`);
   d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
+  return d.toISOString().slice(0, 19) + "Z"; // "2026-10-20T20:10:15Z"
 }
 
 // Nom d'une personne : prénom, sinon e-mail (comptes créés sans prénom), pour la

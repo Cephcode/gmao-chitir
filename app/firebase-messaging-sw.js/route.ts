@@ -1,10 +1,39 @@
 // Service worker des notifications push (Firebase Cloud Messaging), servi à la racine
-// (/firebase-messaging-sw.js) pour couvrir toute l'application.
-// Généré par une route pour y injecter la configuration Firebase publique (NEXT_PUBLIC_*,
-// déjà visible dans le navigateur ; aucune clé secrète ici).
-// Application en arrière-plan : le SDK affiche la notification et ouvre le lien
-// (webpush.fcm_options.link) au clic. Exclu du proxy de session (proxy.ts).
+// (/firebase-messaging-sw.js). Généré par une route pour injecter la config Firebase publique.
+// Les messages sont de type "data" seulement : le service worker affiche la notification
+// et, au clic, ouvre la page précise (data.link). Exclu du proxy de session (proxy.ts).
 const FIREBASE_VERSION = "12.19.0"; // même version que le paquet npm « firebase »
+
+// Code du service worker (sans backticks ni ${} : c'est du texte injecté tel quel)
+const HANDLERS = `
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage(function (payload) {
+  var d = payload.data || {};
+  return self.registration.showNotification(d.title || "GMAO", {
+    body: d.body || "",
+    icon: d.icon || undefined,
+    data: { link: d.link || "/" },
+  });
+});
+
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
+  var link = new URL((event.notification.data && event.notification.data.link) || "/", self.location.origin).href;
+  event.waitUntil(
+    caches.open("push-nav").then(function (cache) {
+      return cache.put("/pending-nav", new Response(link));
+    }).then(function () {
+      return self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    }).then(function (fenetres) {
+      if (fenetres.length) {
+        fenetres[0].postMessage({ type: "NAVIGATE", link: link });
+        return fenetres[0].focus();
+      }
+      return self.clients.openWindow(link);
+    })
+  );
+});`;
 
 export function GET() {
   const config = {
@@ -18,8 +47,7 @@ export function GET() {
   const script = `importScripts("https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-messaging-compat.js");
 firebase.initializeApp(${JSON.stringify(config)});
-firebase.messaging();
-`;
+${HANDLERS}`;
   return new Response(script, {
     headers: {
       "Content-Type": "application/javascript; charset=utf-8",

@@ -3,7 +3,7 @@
 // Mobile : onglets Toutes / Non lues, lien vers « Mes alertes ».
 // « Voir » marque la notification comme lue puis ouvre la page liée.
 import Link from "next/link";
-import { ouvrirNotification, toutMarquerLu } from "@/app/(app)/notifications/actions";
+import { ouvrirNotification, supprimerNotification, toutMarquerLu } from "@/app/(app)/notifications/actions";
 import {
   CATEGORIES,
   SETTINGS,
@@ -19,13 +19,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertSettings } from "@/components/app/notifications/alert-settings";
 import { PushToggle } from "@/components/app/notifications/push-toggle";
+import { DeleteReadButton } from "@/components/app/notifications/delete-read-button";
 
 function Item({ n }: { n: NotificationRow }) {
   const style = TYPE_STYLE[n.type];
   const unread = !n.read_at;
   return (
-    <li>
-      <form action={ouvrirNotification}>
+    <li className="flex items-stretch">
+      <form action={ouvrirNotification} className="flex-1 min-w-0">
         <input type="hidden" name="id" value={n.id} />
         <button
           type="submit"
@@ -52,6 +53,18 @@ function Item({ n }: { n: NotificationRow }) {
           </span>
         </button>
       </form>
+      {/* Formulaire séparé (pas de formulaire imbriqué) : supprime cette notification. */}
+      <form action={supprimerNotification} className={`flex items-center pr-2 ${unread ? "bg-orange-soft/60" : ""}`}>
+        <input type="hidden" name="id" value={n.id} />
+        <button
+          type="submit"
+          aria-label={`Supprimer la notification « ${n.title} »`}
+          title="Supprimer"
+          className="size-11 flex items-center justify-center rounded border-0 bg-transparent text-text-muted hover:text-danger hover:bg-danger-bg cursor-pointer"
+        >
+          <Icon name="trash" size={18} />
+        </button>
+      </form>
     </li>
   );
 }
@@ -65,6 +78,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
   const cat = CATEGORIES.find((c) => c.value === categorie);
   const rows = all.filter((n) => (!cat || cat.types.includes(n.type)) && (!nonLues || !n.read_at));
   const unreadCount = all.filter((n) => !n.read_at).length;
+  const readCount = all.length - unreadCount;
   const groups = ["Aujourd'hui", "Hier", "Cette semaine", "Plus ancien"]
     .map((label) => ({ label, rows: rows.filter((n) => dayGroup(n.created_at) === label) }))
     .filter((g) => g.rows.length > 0);
@@ -79,10 +93,17 @@ export default async function NotificationsPage(props: PageProps<"/notifications
 
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-5 lg:pt-10 flex flex-col gap-5">
-      <header className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center gap-3">
         <h1 className="flex-1 font-display text-[22px] lg:text-[32px] font-semibold m-0 leading-tight">
           Notifications
         </h1>
+          <Link
+              href="/notifications/alertes"
+            className="hidden  self-center md:inline-flex items-center gap-2 py-3 text-orange-text font-bold text-[15px]"
+          >
+            <Icon name="bell" size={18} /> Choisir les alertes que je reçois
+          </Link>
+        {readCount > 0 && <DeleteReadButton count={readCount} />}
         {unreadCount > 0 && (
           <form action={toutMarquerLu}>
             <Button type="submit" variant="secondary" size="sm" icon="check">
@@ -91,6 +112,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
           </form>
         )}
       </header>
+
 
       {/* Mobile : onglets Toutes / Non lues */}
       <nav aria-label="Filtre des notifications" className="lg:hidden grid grid-cols-2 p-1 rounded bg-surface-2">
@@ -111,8 +133,17 @@ export default async function NotificationsPage(props: PageProps<"/notifications
               {t.label}
             </Link>
           );
+          
         })}
+
+
       </nav>
+                        <Link
+              href="/notifications/alertes"
+            className=" md:hidden self-center inline-flex items-center gap-2 py-3 text-orange-text font-bold text-[15px]"
+          >
+            <Icon name="bell" size={18} /> Choisir les alertes que je reçois
+          </Link>
 
       {/* 3 colonnes seulement sur grand écran (xl) : entre 1024 et 1280 px, avec le menu
           latéral, la liste serait écrasée ; « Mes alertes » passe alors dessous. */}
@@ -140,6 +171,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
         </nav>
 
         <section className="flex flex-col gap-4 min-w-0">
+          
           {groups.length === 0 ? (
             <Card className="flex items-center gap-3">
               <span className="size-11 rounded bg-success-bg text-success flex items-center justify-center shrink-0">

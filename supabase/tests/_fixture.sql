@@ -79,6 +79,12 @@ insert into restaurants (id, name, short_code) values
   (tests.id('R1'), 'Test A', 'TSTA'),
   (tests.id('R2'), 'Test B', 'TSTB');
 
+-- Comptes déjà présents dans la base locale (ex. propriétaire créé avec
+-- scripts/creer-proprietaire.mjs pour tester l'application) : écartés le temps du scénario,
+-- sinon ils reçoivent les alertes et faussent le compte des destinataires. Le ROLLBACK
+-- final les restaure (toutes les références à users sont en cascade ou « set null »).
+delete from users where email not like '%@test.local';
+
 -- Comptes (auth.users puis profil applicatif)
 insert into auth.users (id, email, aud, role)
 select id, nom || '@test.local', 'authenticated', 'authenticated'
