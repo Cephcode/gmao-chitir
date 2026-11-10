@@ -7,6 +7,8 @@ import { InterventionList } from "@/components/app/interventions/intervention-li
 import { InterventionSheet } from "@/components/app/interventions/intervention-sheet";
 import { readFailedCount } from "@/lib/photos";
 import { canSetStatus } from "@/lib/intervention-status";
+import { Suspense } from "react";
+import { DeleteNotificationButton } from "@/components/app/notifications/delete-notification-button";
 
 export default async function InterventionPage(props: PageProps<"/interventions/[id]">) {
   const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
@@ -43,6 +45,11 @@ export default async function InterventionPage(props: PageProps<"/interventions/
           photosFailed={readFailedCount(searchParams.photos_echec)}
           closeHref={`/interventions${filtersQuery(filters)}`}
         />
+        {/* Ouverte depuis une notification (?notif=<id>) : bouton pour la supprimer.
+            useSearchParams exige une frontière Suspense. */}
+        <Suspense fallback={null}>
+          <DeleteNotificationButton />
+        </Suspense>
       </aside>
     </div>
   );

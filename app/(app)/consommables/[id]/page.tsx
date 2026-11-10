@@ -6,6 +6,8 @@ import { canEditConsommables, chargerListe, getArticle } from "@/lib/consommable
 import { filtresQuery, lireFiltres } from "@/lib/consommables-rules";
 import { ArticleList } from "@/components/app/consommables/article-list";
 import { ArticleSheet } from "@/components/app/consommables/article-sheet";
+import { Suspense } from "react";
+import { DeleteNotificationButton } from "@/components/app/notifications/delete-notification-button";
 
 export default async function ArticlePage(props: PageProps<"/consommables/[id]">) {
   const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
@@ -34,6 +36,11 @@ export default async function ArticlePage(props: PageProps<"/consommables/[id]">
           role={profile.role}
           query={filtresQuery(filters)}
         />
+        {/* Ouverte depuis une notification (?notif=<id>) : bouton pour la supprimer.
+            useSearchParams exige une frontière Suspense. */}
+        <Suspense fallback={null}>
+          <DeleteNotificationButton />
+        </Suspense>
       </aside>
     </div>
   );

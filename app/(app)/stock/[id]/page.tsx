@@ -5,6 +5,8 @@ import { getNavCounts, getProfile } from "@/lib/session";
 import { canEditStock, filtersQuery, getPart, loadStockList, readFilters } from "@/lib/stock";
 import { StockList } from "@/components/app/stock/stock-list";
 import { PartSheet } from "@/components/app/stock/part-sheet";
+import { Suspense } from "react";
+import { DeleteNotificationButton } from "@/components/app/notifications/delete-notification-button";
 
 export default async function PiecePage(props: PageProps<"/stock/[id]">) {
   const [{ id }, searchParams] = await Promise.all([props.params, props.searchParams]);
@@ -27,6 +29,11 @@ export default async function PiecePage(props: PageProps<"/stock/[id]">) {
         className="lg:sticky lg:top-0 lg:h-dvh lg:w-[420px] lg:shrink-0 lg:overflow-y-auto lg:bg-surface lg:border-l lg:border-border"
       >
         <PartSheet part={part} role={profile.role} query={filtersQuery(filters)} />
+        {/* Ouverte depuis une notification (?notif=<id>) : bouton pour la supprimer.
+            useSearchParams exige une frontière Suspense. */}
+        <Suspense fallback={null}>
+          <DeleteNotificationButton />
+        </Suspense>
       </aside>
     </div>
   );

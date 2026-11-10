@@ -1,6 +1,6 @@
 // Page ouverte depuis une notification : l'adresse porte ?notif=<id>, et la page liée affiche
-// un bandeau pour supprimer cette notification (NotificationBanner). Module sans dépendance
-// serveur : importé à la fois par les actions et par le bandeau (composant client).
+// un bouton pour supprimer cette notification (DeleteNotificationButton). Module sans dépendance
+// serveur : importé à la fois par les actions et par le bouton (composant client).
 
 export const NOTIF_PARAM = "notif";
 

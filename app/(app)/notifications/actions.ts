@@ -26,13 +26,13 @@ export async function ouvrirNotification(formData: FormData) {
     link = (row as { link: string | null } | null)?.link ?? null;
   }
   revalidatePath("/", "layout");
-  // La page liée reçoit ?notif=<id> (bandeau « Supprimer la notification »). Sans lien
+  // La page liée reçoit ?notif=<id> (bouton « Supprimer la notification »). Sans lien
   // (ou notification introuvable) : retour à la liste, où chaque ligne a déjà sa corbeille.
   const cible = safeLink(link);
   redirect(cible === "/notifications" ? cible : lienAvecNotification(cible, id));
 }
 
-// Bandeau de la page ouverte depuis une notification : titre de la notification, ou null
+// Bouton de la page ouverte depuis une notification : titre de la notification, ou null
 // si elle n'existe plus ou n'est pas la sienne (RLS notifications_select).
 export async function lireTitreNotification(id: string): Promise<string | null> {
   if (!UUID_RE.test(id)) return null;
@@ -41,7 +41,7 @@ export async function lireTitreNotification(id: string): Promise<string | null> 
   return (data as { title: string } | null)?.title ?? null;
 }
 
-// Suppression depuis le bandeau (même règle que supprimerNotification), avec un retour.
+// Suppression depuis la page ouverte (même règle que supprimerNotification), avec un retour.
 export async function supprimerNotificationParId(id: string): Promise<{ ok: boolean }> {
   if (!UUID_RE.test(id)) return { ok: false };
   const supabase = await createClient();
