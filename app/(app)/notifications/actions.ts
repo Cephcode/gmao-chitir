@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SETTINGS, safeLink, type NotificationType } from "@/lib/notifications";
+import { UUID_RE, lienAvecNotification } from "@/lib/notification-lien";
 
 // « Voir » : marque comme lue puis ouvre la page liée (lien interne seulement).
 export async function ouvrirNotification(formData: FormData) {
@@ -25,7 +26,28 @@ export async function ouvrirNotification(formData: FormData) {
     link = (row as { link: string | null } | null)?.link ?? null;
   }
   revalidatePath("/", "layout");
-  redirect(safeLink(link));
+  // La page liée reçoit ?notif=<id> (bandeau « Supprimer la notification »). Sans lien
+  // (ou notification introuvable) : retour à la liste, où chaque ligne a déjà sa corbeille.
+  const cible = safeLink(link);
+  redirect(cible === "/notifications" ? cible : lienAvecNotification(cible, id));
+}
+
+// Bandeau de la page ouverte depuis une notification : titre de la notification, ou null
+// si elle n'existe plus ou n'est pas la sienne (RLS notifications_select).
+export async function lireTitreNotification(id: string): Promise<string | null> {
+  if (!UUID_RE.test(id)) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from("notifications").select("title").eq("id", id).maybeSingle();
+  return (data as { title: string } | null)?.title ?? null;
+}
+
+// Suppression depuis le bandeau (même règle que supprimerNotification), avec un retour.
+export async function supprimerNotificationParId(id: string): Promise<{ ok: boolean }> {
+  if (!UUID_RE.test(id)) return { ok: false };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("notifications").delete().eq("id", id).select("id");
+  revalidatePath("/", "layout");
+  return { ok: !error && !!data?.length };
 }
 
 export async function toutMarquerLu() {
