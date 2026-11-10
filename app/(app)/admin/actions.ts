@@ -208,3 +208,43 @@ export async function ajouterRestaurant(input: {
   revalidatePath("/", "layout");
   redirect("/admin/restaurants");
 }
+
+// Renommage d'un restaurant : propriétaire seulement (RLS restaurants_update, et seules
+// les colonnes name et address sont modifiables en direct). Le code court ne change pas.
+export async function renommerRestaurant(id: string, name: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const nom = name.trim();
+  if (!nom) return { ok: false, error: "Le nom du restaurant est obligatoire." };
+  if (nom.length > 120) return { ok: false, error: "Nom trop long (120 caractères au plus)." };
+  const actor = await getActor();
+  if (actor?.role !== "proprietaire") return { ok: false, error: "Seul l'administrateur peut renommer un restaurant." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("restaurants").update({ name: nom }).eq("id", id).select("id");
+  if (error || !data?.length) return { ok: false, error: "Le restaurant n'a pas pu être renommé. Réessayez." };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+// Suppression d'un restaurant et de tout ce qui en dépend (cascade en base) : propriétaire
+// seulement (RLS restaurants_delete). .select() détecte le refus silencieux de la RLS (0 ligne).
+export async function supprimerRestaurant(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const actor = await getActor();
+  if (actor?.role !== "proprietaire") return { ok: false, error: "Seul l'administrateur peut supprimer un restaurant." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("restaurants").delete().eq("id", id).select("id");
+  if (error) console.error("Suppression d'un restaurant, code", error.code);
+  if (error || !data?.length) return { ok: false, error: "Le restaurant n'a pas pu être supprimé. Réessayez." };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+// Nettoyage hebdomadaire des notifications lues depuis plus de 7 jours (tâche pg_cron).
+// Propriétaire seulement : revérifié par la fonction SQL regler_purge_notifications.
+export async function reglerPurgeNotifications(active: boolean): Promise<{ ok: boolean }> {
+  const actor = await getActor();
+  if (actor?.role !== "proprietaire") return { ok: false };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("regler_purge_notifications", { p_active: active });
+  if (error) console.error("Réglage du nettoyage des notifications, code", error.code);
+  revalidatePath("/admin/reglages");
+  return { ok: !error };
+}

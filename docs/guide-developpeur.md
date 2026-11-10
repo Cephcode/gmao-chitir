@@ -220,7 +220,7 @@ La base locale n'a **aucun compte** au départ. Créer un propriétaire avec le 
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" \
-  node scripts/creer-proprietaire.mjs moi@test.local "Moi"
+  node scripts/creer-proprietaire.mjs proprietaire@gmao.local "Moi"
 ```
 
 Puis créer les autres comptes dans Administration. Studio local (tables, SQL) : `http://127.0.0.1:54323`. Les mails des comptes locaux ne partent pas.

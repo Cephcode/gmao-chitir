@@ -5,7 +5,7 @@
 import type { ButtonHTMLAttributes } from "react";
 import { Icon, type IconName } from "@/components/icons";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "dangerSoft";
 type Size = "md" | "sm" | "cta";
 
 // Classes par variante. Sur l'orange, le texte est toujours brun (on-orange), jamais blanc.
@@ -16,6 +16,11 @@ const variantClasses: Record<Variant, string> = {
     "bg-surface text-text shadow-[inset_0_0_0_1.5px_#D6CBBB] hover:bg-surface-2 disabled:text-border-strong",
   ghost: "bg-transparent text-orange-text hover:bg-orange-soft disabled:text-border-strong",
   danger: "bg-danger text-white hover:bg-[#9A1D13]",
+  // Action destructive secondaire (ex. « Supprimer » dans une carte) : discrète tant
+  // qu'elle n'est pas confirmée. Le rouge plein (danger) est réservé à la confirmation.
+  // Même gabarit que secondary (fond surface + bordure intérieure 1,5 px) pour s'aligner à côté.
+  dangerSoft:
+    "bg-surface text-danger shadow-[inset_0_0_0_1.5px_#F1B8B2] hover:bg-danger-bg disabled:text-border-strong",
 };
 
 // Hauteur et rayon par taille. md = 48px (defaut), sm = 36px compact, cta = 56px (action terrain).

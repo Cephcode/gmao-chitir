@@ -34,6 +34,22 @@ export async function toutMarquerLu() {
   revalidatePath("/", "layout");
 }
 
+// Suppression d'une notification (la sienne : RLS notifications_delete).
+export async function supprimerNotification(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = await createClient();
+  await supabase.from("notifications").delete().eq("id", id);
+  revalidatePath("/", "layout");
+}
+
+// Supprime toutes ses notifications déjà lues.
+export async function supprimerNotificationsLues() {
+  const supabase = await createClient();
+  await supabase.from("notifications").delete().not("read_at", "is", null);
+  revalidatePath("/", "layout");
+}
+
 // Interrupteur « Mes alertes » : crée ou met à jour la ligne de réglage.
 export async function reglerAlerte(type: NotificationType, enabled: boolean) {
   if (!SETTINGS.some((s) => s.type === type)) return { ok: false as const };
